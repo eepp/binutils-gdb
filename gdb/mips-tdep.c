@@ -1456,7 +1456,7 @@ mips_fetch_instruction (struct gdbarch *gdbarch,
   if (status)
     {
       if (statusp == NULL)
-	memory_error (status, addr);
+	memory_error ((enum target_xfer_status) status, addr);
       return 0;
     }
   return extract_unsigned_integer (buf, instlen, byte_order);
