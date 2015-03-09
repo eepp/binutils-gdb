@@ -90,12 +90,12 @@ gdbscm_disasm_read_memory_worker (void *datap)
   seekto = gdbscm_scm_from_ulongest (data->memaddr - disasm_data->offset);
   newpos = scm_seek (port, seekto, scm_from_int (SEEK_SET));
   if (!scm_is_eq (seekto, newpos))
-    return "seek error";
+    return (void *) "seek error";
 
   bytes_read = scm_c_read (port, data->myaddr, data->length);
 
   if (bytes_read != data->length)
-    return "short read";
+    return (void *) "short read";
 
   /* If we get here the read succeeded.  */
   return NULL;
