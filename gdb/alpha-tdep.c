@@ -686,7 +686,7 @@ alpha_read_insn (struct gdbarch *gdbarch, CORE_ADDR pc)
 
   status = target_read_memory (pc, buf, sizeof (buf));
   if (status)
-    memory_error (status, pc);
+    memory_error ((enum target_xfer_status) status, pc);
   return extract_unsigned_integer (buf, sizeof (buf), byte_order);
 }
 
