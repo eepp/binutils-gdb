@@ -1034,6 +1034,8 @@ valpy_binop (enum valpy_opcode opcode, PyObject *self, PyObject *other)
       enum exp_opcode op = OP_NULL;
       int handled = 0;
 
+      do // FIXME, code below assumes "break;" works to break out of try block.
+      {
       /* If the gdb.Value object is the second operand, then it will be passed
 	 to us as the OTHER argument, and SELF will be an entirely different
 	 kind of object, altogether.  Because of this, we can't assume self is
@@ -1145,6 +1147,8 @@ valpy_binop (enum valpy_opcode opcode, PyObject *self, PyObject *other)
 	result = value_to_value_object (res_val);
 
       do_cleanups (cleanup);
+
+      } while (0);
     }
   CATCH (except, RETURN_MASK_ALL)
     {
@@ -1379,6 +1383,8 @@ valpy_richcompare (PyObject *self, PyObject *other, int op)
 
   TRY
     {
+      do // FIXME, code below assumes "break;" works to break out of try block.
+      {
       struct value *value_other, *mark = value_mark ();
       struct cleanup *cleanup;
 
@@ -1421,6 +1427,7 @@ valpy_richcompare (PyObject *self, PyObject *other, int op)
       }
 
       do_cleanups (cleanup);
+      } while (0);
     }
   CATCH (except, RETURN_MASK_ALL)
     {
