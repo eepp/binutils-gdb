@@ -315,6 +315,8 @@ core_addr_to_string_nz (const CORE_ADDR addr)
 
 /* See print-utils.h.  */
 
+#undef host_address_to_string
+
 const char *
 host_address_to_string (const void *addr)
 {

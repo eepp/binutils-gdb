@@ -1103,6 +1103,8 @@ print_spaces (int n, struct ui_file *file)
 
 /* Print a host address.  */
 
+#undef gdb_print_host_address
+
 void
 gdb_print_host_address (const void *addr, struct ui_file *stream)
 {

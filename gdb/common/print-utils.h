@@ -67,4 +67,8 @@ extern const char *core_addr_to_string_nz (const CORE_ADDR addr);
 
 extern const char *host_address_to_string (const void *addr);
 
+/* Wrapper that avoids adding a pointless cast to all callers.  */
+#define host_address_to_string(ADDR) \
+  host_address_to_string ((const void *) (ADDR))
+
 #endif /* COMMON_CELLS_H */
