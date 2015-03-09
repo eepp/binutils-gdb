@@ -2783,7 +2783,8 @@ val_print_string (struct type *elttype, const char *encoding,
     {
       char *str;
 
-      str = memory_error_message (errcode, gdbarch, addr);
+      str = memory_error_message ((enum target_xfer_status) errcode, gdbarch,
+				  addr);
       make_cleanup (xfree, str);
 
       fprintf_filtered (stream, "<error: ");

@@ -330,7 +330,7 @@ c_get_string (struct value *value, gdb_byte **buffer,
       if (err)
 	{
 	  xfree (*buffer);
-	  memory_error (err, addr);
+	  memory_error ((enum target_xfer_status) err, addr);
 	}
     }
 

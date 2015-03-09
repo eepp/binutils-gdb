@@ -132,7 +132,7 @@ static void
 dis_asm_memory_error (int status, bfd_vma memaddr,
 		      struct disassemble_info *info)
 {
-  memory_error (status, memaddr);
+  memory_error ((enum target_xfer_status) status, memaddr);
 }
 
 /* Like print_address with slightly different parameters.  */

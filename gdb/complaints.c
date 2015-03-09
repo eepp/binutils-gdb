@@ -174,7 +174,7 @@ vcomplaint (struct complaints **c, const char *file,
   if (info_verbose)
     series = SUBSEQUENT_MESSAGE;
   else
-    series = complaints->series;
+    series = (enum complaint_series) complaints->series;
 
   /* Pass 'fmt' instead of 'complaint->fmt' to printf-like callees
      from here on, to avoid "format string is not a string literal"
