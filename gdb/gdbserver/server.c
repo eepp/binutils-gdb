@@ -394,8 +394,9 @@ write_qxfer_response (char *buf, const void *data, int len, int is_more)
   else
     buf[0] = 'l';
 
-  return remote_escape_output (data, len, 1, (unsigned char *) buf + 1,
-			       &out_len, PBUFSIZ - 2) + 1;
+  return remote_escape_output ((const gdb_byte *) data, len, 1,
+			       (gdb_byte *) buf + 1, &out_len,
+			       PBUFSIZ - 2) + 1;
 }
 
 /* Handle btrace enabling in BTS format.  */
