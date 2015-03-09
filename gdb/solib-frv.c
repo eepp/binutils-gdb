@@ -619,7 +619,8 @@ enable_break2 (void)
 	    interp_plt_sect_low + bfd_section_size (tmp_bfd, interp_sect);
 	}
 
-      addr = gdb_bfd_lookup_symbol (tmp_bfd, cmp_name, "_dl_debug_addr");
+      addr = gdb_bfd_lookup_symbol (tmp_bfd,
+				    cmp_name, (void *) "_dl_debug_addr");
 
       if (addr == 0)
 	{

@@ -876,7 +876,8 @@ enable_break (void)
 	    info->interp_plt_sect_low + bfd_section_size (tmp_bfd, interp_sect);
 	}
 
-      addr = gdb_bfd_lookup_symbol (tmp_bfd, cmp_name, "_dl_debug_state");
+      addr = gdb_bfd_lookup_symbol (tmp_bfd,
+				    cmp_name, (void *) "_dl_debug_state");
       if (addr != 0)
 	{
 	  if (solib_dsbt_debug)
