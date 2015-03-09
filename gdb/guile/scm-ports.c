@@ -359,6 +359,7 @@ ioscm_make_gdb_stdio_port (int fd)
 {
   int is_a_tty = isatty (fd);
   const char *name;
+  const char *mode_str;
   long mode_bits;
   SCM port;
 
@@ -366,20 +367,21 @@ ioscm_make_gdb_stdio_port (int fd)
     {
     case 0:
       name = input_port_name;
-      mode_bits = scm_mode_bits (is_a_tty ? "r0" : "r");
+      mode_str = is_a_tty ? "r0" : "r";
       break;
     case 1:
       name = output_port_name;
-      mode_bits = scm_mode_bits (is_a_tty ? "w0" : "w");
+      mode_str = is_a_tty ? "w0" : "w";
       break;
     case 2:
       name = error_port_name;
-      mode_bits = scm_mode_bits (is_a_tty ? "w0" : "w");
+      mode_str = is_a_tty ? "w0" : "w";
       break;
     default:
       gdb_assert_not_reached ("bad stdio file descriptor");
     }
 
+  mode_bits = scm_mode_bits ((char *) mode_str);
   port = ioscm_open_port (stdio_port_desc, mode_bits);
 
   scm_set_port_filename_x (port, gdbscm_scm_from_c_string (name));
