@@ -403,7 +403,8 @@ struct target_ops
      to break a cyclic dependency.
      Return 0 on success; print an error message into BUFFER and return -1,
      otherwise.  */
-  int (*read_btrace) (struct btrace_target_info *, struct buffer *, int type);
+  int (*read_btrace) (struct btrace_target_info *, struct buffer *,
+		      enum btrace_read_type type);
 
   /* Read the branch trace configuration into BUFFER.
      Return 0 on success; print an error message into BUFFER and return -1
