@@ -176,7 +176,7 @@ net_open (struct serial *scb, const char *name)
   else if (startswith (name, "tcp:"))
     name = name + 4;
 
-  port_str = strchr (name, ':');
+  port_str = strchr ((char *) name, ':');
 
   if (!port_str)
     error (_("net_open: No colon in host name!"));  /* Shouldn't ever
