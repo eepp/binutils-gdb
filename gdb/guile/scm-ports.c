@@ -718,8 +718,9 @@ gdbscm_memory_port_flush (SCM port)
 /* "write" method for memory ports.  */
 
 static void
-gdbscm_memory_port_write (SCM port, const void *data, size_t size)
+gdbscm_memory_port_write (SCM port, const void *vdata, size_t size)
 {
+  const gdb_byte *data = (const gdb_byte *) vdata;
   scm_t_port *pt = SCM_PTAB_ENTRY (port);
   ioscm_memory_port *iomem = (ioscm_memory_port *) SCM_STREAM (port);
 
@@ -760,7 +761,7 @@ gdbscm_memory_port_write (SCM port, const void *data, size_t size)
 	pt->write_pos = pt->write_end;
 	gdbscm_memory_port_flush (port);
 	{
-	  const void *ptr = ((const char *) data) + space;
+	  const gdb_byte *ptr = data + space;
 	  size_t remaining = size - space;
 
 	  if (remaining >= pt->write_buf_size)
