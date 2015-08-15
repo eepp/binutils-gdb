@@ -232,7 +232,7 @@ add_symbol_to_list (struct symbol *symbol, struct pending **listhead)
 	}
       else
 	{
-	  link = (struct pending *) xmalloc (sizeof (struct pending));
+	  link = XNEW (struct pending);
 	}
 
       link->next = *listhead;
@@ -543,8 +543,7 @@ record_pending_block (struct objfile *objfile, struct block *block,
   if (pending_blocks == NULL)
     obstack_init (&pending_block_obstack);
 
-  pblock = (struct pending_block *)
-    obstack_alloc (&pending_block_obstack, sizeof (struct pending_block));
+  pblock = XOBNEW (&pending_block_obstack, struct pending_block);
   pblock->block = block;
   if (opblock)
     {
@@ -698,7 +697,7 @@ start_subfile (const char *name)
 
   /* This subfile is not known.  Add an entry for it.  */
 
-  subfile = (struct subfile *) xmalloc (sizeof (struct subfile));
+  subfile = XNEW (struct subfile);
   memset (subfile, 0, sizeof (struct subfile));
   subfile->buildsym_compunit = buildsym_compunit;
 
@@ -766,8 +765,7 @@ start_buildsym_compunit (struct objfile *objfile, const char *comp_dir)
 {
   struct buildsym_compunit *bscu;
 
-  bscu = (struct buildsym_compunit *)
-    xmalloc (sizeof (struct buildsym_compunit));
+  bscu = XNEW (struct buildsym_compunit);
   memset (bscu, 0, sizeof (struct buildsym_compunit));
 
   bscu->objfile = objfile;
@@ -859,8 +857,7 @@ patch_subfile_names (struct subfile *subfile, char *name)
 void
 push_subfile (void)
 {
-  struct subfile_stack *tem
-    = (struct subfile_stack *) xmalloc (sizeof (struct subfile_stack));
+  struct subfile_stack *tem = XNEW (struct subfile_stack);
 
   tem->next = subfile_stack;
   subfile_stack = tem;
@@ -1258,7 +1255,7 @@ end_symtab_get_static_block (CORE_ADDR end_addr, int expandable, int required)
       for (pb = pending_blocks; pb != NULL; pb = pb->next)
 	count++;
 
-      barray = xmalloc (sizeof (*barray) * count);
+      barray = XNEWVEC (struct block *, count);
       back_to = make_cleanup (xfree, barray);
 
       bp = barray;
@@ -1761,8 +1758,7 @@ buildsym_init (void)
   if (context_stack == NULL)
     {
       context_stack_size = INITIAL_CONTEXT_STACK_SIZE;
-      context_stack = (struct context_stack *)
-	xmalloc (context_stack_size * sizeof (struct context_stack));
+      context_stack = XNEWVEC (struct context_stack, context_stack_size);
     }
 
   /* Ensure the really_free_pendings cleanup was called after

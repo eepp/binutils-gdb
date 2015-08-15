@@ -798,9 +798,7 @@ monitor_open (const char *args, struct monitor_ops *mon_ops, int from_tty)
       if (mon_ops->num_breakpoints == 0)
 	mon_ops->num_breakpoints = 8;
 
-      breakaddr = (CORE_ADDR *)
-	xmalloc (mon_ops->num_breakpoints * sizeof (CORE_ADDR));
-      memset (breakaddr, 0, mon_ops->num_breakpoints * sizeof (CORE_ADDR));
+      breakaddr = XCNEWVEC (CORE_ADDR, mon_ops->num_breakpoints);
     }
 
   /* Remove all breakpoints.  */

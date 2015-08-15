@@ -539,7 +539,7 @@ ps_get_thread_area (const struct ps_prochandle *ph,
 static struct arch_process_info *
 aarch64_linux_new_process (void)
 {
-  struct arch_process_info *info = xcalloc (1, sizeof (*info));
+  struct arch_process_info *info = XCNEW (struct arch_process_info);
 
   aarch64_init_debug_reg_state (&info->debug_reg_state);
 
@@ -551,7 +551,7 @@ aarch64_linux_new_process (void)
 static void
 aarch64_linux_new_thread (struct lwp_info *lwp)
 {
-  struct arch_lwp_info *info = xcalloc (1, sizeof (*info));
+  struct arch_lwp_info *info = XCNEW (struct arch_lwp_info);
 
   /* Mark that all the hardware breakpoint/watchpoint register pairs
      for this thread need to be initialized (with data from
