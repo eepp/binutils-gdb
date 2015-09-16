@@ -491,7 +491,7 @@ typedef CORE_ADDR jit_dbg_reader_data;
 static enum gdb_status
 jit_target_read_impl (GDB_CORE_ADDR target_mem, void *gdb_buf, int len)
 {
-  int result = target_read_memory ((CORE_ADDR) target_mem, gdb_buf, len);
+  int result = target_read_memory ((CORE_ADDR) target_mem, (gdb_byte *) gdb_buf, len);
   if (result == 0)
     return GDB_SUCCESS;
   else
@@ -847,7 +847,7 @@ jit_reader_try_read_symtab (struct jit_code_entry *code_entry,
   status = 1;
   TRY
     {
-      if (target_read_memory (code_entry->symfile_addr, gdb_mem,
+      if (target_read_memory (code_entry->symfile_addr, (gdb_byte *) gdb_mem,
 			      code_entry->symfile_size))
 	status = 0;
     }

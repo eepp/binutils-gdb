@@ -1647,7 +1647,7 @@ aarch64_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
       stack_item_t *si = VEC_last (stack_item_t, info.si);
 
       sp -= si->len;
-      write_memory (sp, si->data, si->len);
+      write_memory (sp, (const gdb_byte *) si->data, si->len);
       VEC_pop (stack_item_t, info.si);
     }
 
@@ -2705,7 +2705,7 @@ aarch64_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
 
   /* Hook in the ABI-specific overrides, if they have been registered.  */
   info.target_desc = tdesc;
-  info.tdep_info = (void *) tdesc_data;
+  info.tdep_info = (struct gdbarch_tdep_info *) (void *) tdesc_data;
   gdbarch_init_osabi (info, gdbarch);
 
   dwarf2_frame_set_init_reg (gdbarch, aarch64_dwarf2_frame_init_reg);

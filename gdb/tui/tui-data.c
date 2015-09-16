@@ -192,7 +192,7 @@ void
 tui_add_to_source_windows (struct tui_win_info *win_info)
 {
   if (source_windows.count < 2)
-    source_windows.list[source_windows.count++] = (void *) win_info;
+    source_windows.list[source_windows.count++] = win_info;
 }
 
 
@@ -588,7 +588,7 @@ tui_alloc_content (int num_elements, enum tui_win_type type)
       if (type != DATA_WIN)
 	{
 	  element_block_ptr =
-	    xmalloc (sizeof (struct tui_win_element) * num_elements);
+	    (char *) xmalloc (sizeof (struct tui_win_element) * num_elements);
 	  if (element_block_ptr != NULL)
 	    {
 	      for (i = 0; i < num_elements; i++)
@@ -636,7 +636,7 @@ tui_add_content_elements (struct tui_gen_win_info *win_info,
 	  element_ptr = XNEW (struct tui_win_element);
 	  if (element_ptr != NULL)
 	    {
-	      win_info->content[i] = (void *) element_ptr;
+	      win_info->content[i] = element_ptr;
 	      init_content_element (element_ptr, win_info->type);
 	      win_info->content_size++;
 	    }

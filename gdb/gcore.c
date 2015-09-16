@@ -582,7 +582,7 @@ gcore_copy_callback (bfd *obfd, asection *osec, void *ignored)
 	size = total_size;
 
       if (target_read_memory (bfd_section_vma (obfd, osec) + offset,
-			      memhunk, size) != 0)
+			      (gdb_byte *) memhunk, size) != 0)
 	{
 	  warning (_("Memory read failed for corefile "
 		     "section, %s bytes at %s."),

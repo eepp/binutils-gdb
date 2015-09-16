@@ -890,7 +890,7 @@ sparc64_store_arguments (struct regcache *regcache, int nargs,
 	  /* Structure, Union or long double Complex arguments.  */
 	  gdb_assert (len <= 16);
 	  memset (buf, 0, sizeof (buf));
-	  valbuf = memcpy (buf, valbuf, len);
+	  valbuf = (const gdb_byte *) memcpy (buf, valbuf, len);
 
 	  if (element % 2 && sparc64_16_byte_align_p (type))
 	    element++;

@@ -1746,9 +1746,9 @@ mi_cmd_data_write_memory (char *command, char **argv, int argc)
   /* Get the value into an array.  */
   buffer = xmalloc (word_size);
   old_chain = make_cleanup (xfree, buffer);
-  store_signed_integer (buffer, word_size, byte_order, value);
+  store_signed_integer ((gdb_byte *) buffer, word_size, byte_order, value);
   /* Write it down to memory.  */
-  write_memory_with_notification (addr, buffer, word_size);
+  write_memory_with_notification (addr, (const bfd_byte *) buffer, word_size);
   /* Free the buffer.  */
   do_cleanups (old_chain);
 }

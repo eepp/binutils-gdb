@@ -522,7 +522,7 @@ infpy_read_memory (PyObject *self, PyObject *args, PyObject *kw)
     {
       buffer = xmalloc (length);
 
-      read_memory (addr, buffer, length);
+      read_memory (addr, (gdb_byte *) buffer, length);
     }
   CATCH (except, RETURN_MASK_ALL)
     {
@@ -774,7 +774,7 @@ infpy_search_memory (PyObject *self, PyObject *args, PyObject *kw)
   TRY
     {
       found = target_search_memory (start_addr, length,
-				    buffer, pattern_size,
+				    (const gdb_byte *) buffer, pattern_size,
 				    &found_addr);
     }
   CATCH (ex, RETURN_MASK_ALL)

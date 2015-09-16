@@ -289,7 +289,7 @@ lm32_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
 	regcache_cooked_write_unsigned (regcache, first_arg_reg + i, val);
       else
 	{
-	  write_memory (sp, (void *) &val, TYPE_LENGTH (arg_type));
+	  write_memory (sp, (const gdb_byte *) &val, TYPE_LENGTH (arg_type));
 	  sp -= 4;
 	}
     }

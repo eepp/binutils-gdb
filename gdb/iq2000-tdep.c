@@ -562,7 +562,7 @@ iq2000_extract_return_value (struct type *type, struct regcache *regcache,
 	  /* By using store_unsigned_integer we avoid having to
 	     do anything special for small big-endian values.  */
 	  regcache_cooked_read_unsigned (regcache, regno++, &tmp);
-	  store_unsigned_integer (valbuf, size, byte_order, tmp);
+	  store_unsigned_integer ((gdb_byte *) valbuf, size, byte_order, tmp);
 	  len -= size;
 	  valbuf = ((char *) valbuf) + size;
 	}
@@ -574,7 +574,7 @@ iq2000_extract_return_value (struct type *type, struct regcache *regcache,
       ULONGEST return_buffer;
       regcache_cooked_read_unsigned (regcache, E_FN_RETURN_REGNUM,
 				     &return_buffer);
-      read_memory (return_buffer, valbuf, TYPE_LENGTH (type));
+      read_memory (return_buffer, (gdb_byte *) valbuf, TYPE_LENGTH (type));
     }
 }
 

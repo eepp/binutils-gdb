@@ -125,7 +125,7 @@ moxie_store_return_value (struct type *type, struct regcache *regcache,
   int len = TYPE_LENGTH (type);
 
   /* Things always get returned in RET1_REGNUM, RET2_REGNUM.  */
-  regval = extract_unsigned_integer (valbuf, len > 4 ? 4 : len, byte_order);
+  regval = extract_unsigned_integer ((const gdb_byte *) valbuf, len > 4 ? 4 : len, byte_order);
   regcache_cooked_write_unsigned (regcache, RET1_REGNUM, regval);
   if (len > 4)
     {
@@ -503,7 +503,7 @@ moxie_extract_return_value (struct type *type, struct regcache *regcache,
 {
   struct gdbarch *gdbarch = get_regcache_arch (regcache);
   enum bfd_endian byte_order = gdbarch_byte_order (gdbarch);
-  bfd_byte *valbuf = dst;
+  bfd_byte *valbuf = (bfd_byte *) dst;
   int len = TYPE_LENGTH (type);
   ULONGEST tmp;
 

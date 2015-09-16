@@ -3939,7 +3939,7 @@ arm_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
   while (si)
     {
       sp -= si->len;
-      write_memory (sp, si->data, si->len);
+      write_memory (sp, (const gdb_byte *) si->data, si->len);
       si = pop_stack_item (si);
     }
 

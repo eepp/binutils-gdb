@@ -915,7 +915,7 @@ cris_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
       /* fp_arg must be word-aligned (i.e., don't += len) to match
 	 the function prologue.  */
       sp = (sp - si->len) & ~3;
-      write_memory (sp, si->data, si->len);
+      write_memory (sp, (const gdb_byte *) si->data, si->len);
       si = pop_stack_item (si);
     }
 

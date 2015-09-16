@@ -1329,7 +1329,7 @@ avr_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
     {
       sp -= si->len;
       /* Add 1 to sp here to account for post decr nature of pushes.  */
-      write_memory (sp + 1, si->data, si->len);
+      write_memory (sp + 1, (const gdb_byte *) si->data, si->len);
       si = pop_stack_item (si);
     }
 

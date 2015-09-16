@@ -239,16 +239,17 @@ dump_memory_to_file (const char *cmd, const char *mode, const char *file_format)
      value.  */
   buf = xmalloc (count);
   make_cleanup (xfree, buf);
-  read_memory (lo, buf, count);
+  read_memory (lo, (gdb_byte *) buf, count);
   
   /* Have everything.  Open/write the data.  */
   if (file_format == NULL || strcmp (file_format, "binary") == 0)
     {
-      dump_binary_file (filename, mode, buf, count);
+      dump_binary_file (filename, mode, (const bfd_byte *) buf, count);
     }
   else
     {
-      dump_bfd_file (filename, mode, file_format, lo, buf, count);
+      dump_bfd_file (filename, mode, file_format, lo, (const bfd_byte *) buf,
+		     count);
     }
 
   do_cleanups (old_cleanups);

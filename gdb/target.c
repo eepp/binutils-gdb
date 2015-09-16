@@ -1249,8 +1249,8 @@ memory_xfer_partial (struct target_ops *ops, enum target_object object,
       old_chain = make_cleanup (xfree, buf);
       memcpy (buf, writebuf, len);
 
-      breakpoint_xfer_memory (NULL, buf, writebuf, memaddr, len);
-      res = memory_xfer_partial_1 (ops, object, NULL, buf, memaddr, len,
+      breakpoint_xfer_memory (NULL, (gdb_byte *) buf, writebuf, memaddr, len);
+      res = memory_xfer_partial_1 (ops, object, NULL, (const gdb_byte *) buf, memaddr, len,
 				   xfered_len);
 
       do_cleanups (old_chain);
@@ -2391,8 +2391,8 @@ simple_search_memory (struct target_ops *ops,
       gdb_byte *found_ptr;
       unsigned nr_search_bytes = min (search_space_len, search_buf_size);
 
-      found_ptr = memmem (search_buf, nr_search_bytes,
-			  pattern, pattern_len);
+      found_ptr = (gdb_byte *) memmem (search_buf, nr_search_bytes,
+				       pattern, pattern_len);
 
       if (found_ptr != NULL)
 	{

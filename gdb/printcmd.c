@@ -365,20 +365,20 @@ print_scalar_formatted (const void *valaddr, struct type *type,
       switch (options->format)
 	{
 	case 'o':
-	  print_octal_chars (stream, valaddr, len, byte_order);
+	  print_octal_chars (stream, (const gdb_byte *) valaddr, len, byte_order);
 	  return;
 	case 'u':
 	case 'd':
-	  print_decimal_chars (stream, valaddr, len, byte_order);
+	  print_decimal_chars (stream, (const gdb_byte *) valaddr, len, byte_order);
 	  return;
 	case 't':
-	  print_binary_chars (stream, valaddr, len, byte_order);
+	  print_binary_chars (stream, (const gdb_byte *) valaddr, len, byte_order);
 	  return;
 	case 'x':
-	  print_hex_chars (stream, valaddr, len, byte_order);
+	  print_hex_chars (stream, (const gdb_byte *) valaddr, len, byte_order);
 	  return;
 	case 'c':
-	  print_char_chars (stream, type, valaddr, len, byte_order);
+	  print_char_chars (stream, type, (const gdb_byte *) valaddr, len, byte_order);
 	  return;
 	default:
 	  break;
@@ -386,7 +386,7 @@ print_scalar_formatted (const void *valaddr, struct type *type,
     }
 
   if (options->format != 'f')
-    val_long = unpack_long (type, valaddr);
+    val_long = unpack_long (type, (const gdb_byte *) valaddr);
 
   /* If the value is a pointer, and pointers and addresses are not the
      same, then at this point, the value's length (in target bytes) is
@@ -442,7 +442,7 @@ print_scalar_formatted (const void *valaddr, struct type *type,
 
     case 'a':
       {
-	CORE_ADDR addr = unpack_pointer (type, valaddr);
+	CORE_ADDR addr = unpack_pointer (type, (const gdb_byte *) valaddr);
 
 	print_address (gdbarch, addr, stream);
       }
@@ -464,7 +464,7 @@ print_scalar_formatted (const void *valaddr, struct type *type,
 
     case 'f':
       type = float_type_from_length (type);
-      print_floating (valaddr, type, stream);
+      print_floating ((const gdb_byte *) valaddr, type, stream);
       break;
 
     case 0:
@@ -519,7 +519,7 @@ print_scalar_formatted (const void *valaddr, struct type *type,
       break;
 
     case 'z':
-      print_hex_chars (stream, valaddr, len, byte_order);
+      print_hex_chars (stream, (const gdb_byte *) valaddr, len, byte_order);
       break;
 
     default:
