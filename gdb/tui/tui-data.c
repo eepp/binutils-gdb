@@ -573,7 +573,7 @@ tui_win_content
 tui_alloc_content (int num_elements, enum tui_win_type type)
 {
   tui_win_content content;
-  char *element_block_ptr;
+  struct tui_win_element *element_block_ptr;
   int i;
 
   content = XNEWVEC (struct tui_win_element *, num_elements);
@@ -587,21 +587,12 @@ tui_alloc_content (int num_elements, enum tui_win_type type)
        */
       if (type != DATA_WIN)
 	{
-	  element_block_ptr =
-	    (char *) xmalloc (sizeof (struct tui_win_element) * num_elements);
-	  if (element_block_ptr != NULL)
+	  element_block_ptr = XNEWVEC (struct tui_win_element, num_elements);
+	  for (i = 0; i < num_elements; i++)
 	    {
-	      for (i = 0; i < num_elements; i++)
-		{
-		  content[i] = (struct tui_win_element *) element_block_ptr;
-		  init_content_element (content[i], type);
-		  element_block_ptr += sizeof (struct tui_win_element);
-		}
-	    }
-	  else
-	    {
-	      xfree (content);
-	      content = (tui_win_content) NULL;
+	      content[i] = element_block_ptr;
+	      init_content_element (content[i], type);
+	      element_block_ptr++;
 	    }
 	}
     }
