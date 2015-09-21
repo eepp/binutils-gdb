@@ -2050,7 +2050,7 @@ i386_frame_cache (struct frame_info *this_frame, void **this_cache)
   struct i386_frame_cache *cache;
 
   if (*this_cache)
-    return *this_cache;
+    return (struct i386_frame_cache *) *this_cache;
 
   cache = i386_alloc_frame_cache ();
   *this_cache = cache;
@@ -2220,7 +2220,7 @@ i386_epilogue_frame_cache (struct frame_info *this_frame, void **this_cache)
   CORE_ADDR sp;
 
   if (*this_cache)
-    return *this_cache;
+    return (struct i386_frame_cache *) *this_cache;
 
   cache = i386_alloc_frame_cache ();
   *this_cache = cache;
@@ -2407,7 +2407,7 @@ i386_sigtramp_frame_cache (struct frame_info *this_frame, void **this_cache)
   gdb_byte buf[4];
 
   if (*this_cache)
-    return *this_cache;
+    return (struct i386_frame_cache *) *this_cache;
 
   cache = i386_alloc_frame_cache ();
 

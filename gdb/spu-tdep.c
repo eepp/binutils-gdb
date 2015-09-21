@@ -1000,7 +1000,7 @@ spu_frame_unwind_cache (struct frame_info *this_frame,
   gdb_byte buf[16];
 
   if (*this_prologue_cache)
-    return *this_prologue_cache;
+    return (struct spu_unwind_cache *) *this_prologue_cache;
 
   info = FRAME_OBSTACK_ZALLOC (struct spu_unwind_cache);
   *this_prologue_cache = info;
@@ -1208,7 +1208,7 @@ struct spu2ppu_cache
 static struct gdbarch *
 spu2ppu_prev_arch (struct frame_info *this_frame, void **this_cache)
 {
-  struct spu2ppu_cache *cache = *this_cache;
+  struct spu2ppu_cache *cache = (struct spu2ppu_cache *) *this_cache;
   return get_regcache_arch (cache->regcache);
 }
 
@@ -1216,7 +1216,7 @@ static void
 spu2ppu_this_id (struct frame_info *this_frame,
 		 void **this_cache, struct frame_id *this_id)
 {
-  struct spu2ppu_cache *cache = *this_cache;
+  struct spu2ppu_cache *cache = (struct spu2ppu_cache *) *this_cache;
   *this_id = cache->frame_id;
 }
 
@@ -1224,7 +1224,7 @@ static struct value *
 spu2ppu_prev_register (struct frame_info *this_frame,
 		       void **this_cache, int regnum)
 {
-  struct spu2ppu_cache *cache = *this_cache;
+  struct spu2ppu_cache *cache = (struct spu2ppu_cache *) *this_cache;
   struct gdbarch *gdbarch = get_regcache_arch (cache->regcache);
   gdb_byte *buf;
 
@@ -1286,7 +1286,7 @@ spu2ppu_sniffer (const struct frame_unwind *self,
 static void
 spu2ppu_dealloc_cache (struct frame_info *self, void *this_cache)
 {
-  struct spu2ppu_cache *cache = this_cache;
+  struct spu2ppu_cache *cache = (struct spu2ppu_cache *) this_cache;
   regcache_xfree (cache->regcache);
 }
 

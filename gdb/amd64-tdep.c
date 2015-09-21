@@ -2471,7 +2471,7 @@ amd64_frame_cache (struct frame_info *this_frame, void **this_cache)
   struct amd64_frame_cache *cache;
 
   if (*this_cache)
-    return *this_cache;
+    return (struct amd64_frame_cache *) *this_cache;
 
   cache = amd64_alloc_frame_cache ();
   *this_cache = cache;
@@ -2590,7 +2590,7 @@ amd64_sigtramp_frame_cache (struct frame_info *this_frame, void **this_cache)
   int i;
 
   if (*this_cache)
-    return *this_cache;
+    return (struct amd64_frame_cache *) *this_cache;
 
   cache = amd64_alloc_frame_cache ();
 
@@ -2766,7 +2766,7 @@ amd64_epilogue_frame_cache (struct frame_info *this_frame, void **this_cache)
   gdb_byte buf[8];
 
   if (*this_cache)
-    return *this_cache;
+    return (struct amd64_frame_cache *) *this_cache;
 
   cache = amd64_alloc_frame_cache ();
   *this_cache = cache;

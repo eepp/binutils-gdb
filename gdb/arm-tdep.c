@@ -2029,7 +2029,7 @@ arm_prologue_unwind_stop_reason (struct frame_info *this_frame,
 
   if (*this_cache == NULL)
     *this_cache = arm_make_prologue_cache (this_frame);
-  cache = *this_cache;
+  cache = (struct arm_prologue_cache *) *this_cache;
 
   /* This is meant to halt the backtrace at "_start".  */
   pc = get_frame_pc (this_frame);
@@ -2057,7 +2057,7 @@ arm_prologue_this_id (struct frame_info *this_frame,
 
   if (*this_cache == NULL)
     *this_cache = arm_make_prologue_cache (this_frame);
-  cache = *this_cache;
+  cache = (struct arm_prologue_cache *) *this_cache;
 
   /* Use function start address as part of the frame ID.  If we cannot
      identify the start address (due to missing symbol information),
@@ -2081,7 +2081,7 @@ arm_prologue_prev_register (struct frame_info *this_frame,
 
   if (*this_cache == NULL)
     *this_cache = arm_make_prologue_cache (this_frame);
-  cache = *this_cache;
+  cache = (struct arm_prologue_cache *) *this_cache;
 
   /* If we are asked to unwind the PC, then we need to return the LR
      instead.  The prologue may save PC, but it will point into this
@@ -2962,7 +2962,7 @@ arm_stub_this_id (struct frame_info *this_frame,
 
   if (*this_cache == NULL)
     *this_cache = arm_make_stub_cache (this_frame);
-  cache = *this_cache;
+  cache = (struct arm_prologue_cache *) *this_cache;
 
   *this_id = frame_id_build (cache->prev_sp, get_frame_pc (this_frame));
 }
@@ -3056,7 +3056,7 @@ arm_m_exception_this_id (struct frame_info *this_frame,
 
   if (*this_cache == NULL)
     *this_cache = arm_m_exception_cache (this_frame);
-  cache = *this_cache;
+  cache = (struct arm_prologue_cache *) *this_cache;
 
   /* Our frame ID for a stub frame is the current SP and LR.  */
   *this_id = frame_id_build (cache->prev_sp,
@@ -3076,7 +3076,7 @@ arm_m_exception_prev_register (struct frame_info *this_frame,
 
   if (*this_cache == NULL)
     *this_cache = arm_m_exception_cache (this_frame);
-  cache = *this_cache;
+  cache = (struct arm_prologue_cache *) *this_cache;
 
   /* The value was already reconstructed into PREV_SP.  */
   if (prev_regnum == ARM_SP_REGNUM)
@@ -3129,7 +3129,7 @@ arm_normal_frame_base (struct frame_info *this_frame, void **this_cache)
 
   if (*this_cache == NULL)
     *this_cache = arm_make_prologue_cache (this_frame);
-  cache = *this_cache;
+  cache = (struct arm_prologue_cache *) *this_cache;
 
   return cache->prev_sp - cache->framesize;
 }

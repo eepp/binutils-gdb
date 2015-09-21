@@ -1035,7 +1035,7 @@ dwarf2_frame_cache (struct frame_info *this_frame, void **this_cache)
   const gdb_byte *instr;
 
   if (*this_cache)
-    return *this_cache;
+    return (struct dwarf2_frame_cache *) *this_cache;
 
   /* Allocate a new cache.  */
   cache = FRAME_OBSTACK_ZALLOC (struct dwarf2_frame_cache);

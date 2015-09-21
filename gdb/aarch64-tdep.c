@@ -846,7 +846,7 @@ aarch64_make_prologue_cache (struct frame_info *this_frame, void **this_cache)
   struct aarch64_prologue_cache *cache;
 
   if (*this_cache != NULL)
-    return *this_cache;
+    return (struct aarch64_prologue_cache *) *this_cache;
 
   cache = FRAME_OBSTACK_ZALLOC (struct aarch64_prologue_cache);
   cache->saved_regs = trad_frame_alloc_saved_regs (this_frame);
@@ -971,7 +971,7 @@ aarch64_make_stub_cache (struct frame_info *this_frame, void **this_cache)
   struct aarch64_prologue_cache *cache;
 
   if (*this_cache != NULL)
-    return *this_cache;
+    return (struct aarch64_prologue_cache *) *this_cache;
 
   cache = FRAME_OBSTACK_ZALLOC (struct aarch64_prologue_cache);
   cache->saved_regs = trad_frame_alloc_saved_regs (this_frame);

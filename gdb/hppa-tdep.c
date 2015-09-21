@@ -1908,7 +1908,7 @@ hppa_frame_cache (struct frame_info *this_frame, void **this_cache)
       if (hppa_debug)
         fprintf_unfiltered (gdb_stdlog, "base=%s (cached) }",
           paddress (gdbarch, ((struct hppa_frame_cache *)*this_cache)->base));
-      return (*this_cache);
+      return (struct hppa_frame_cache *) (*this_cache);
     }
   cache = FRAME_OBSTACK_ZALLOC (struct hppa_frame_cache);
   (*this_cache) = cache;
@@ -1920,7 +1920,7 @@ hppa_frame_cache (struct frame_info *this_frame, void **this_cache)
     {
       if (hppa_debug)
         fprintf_unfiltered (gdb_stdlog, "base=NULL (no unwind entry) }");
-      return (*this_cache);
+      return (struct hppa_frame_cache *) (*this_cache);
     }
 
   /* Turn the Entry_GR field into a bitmask.  */
@@ -2010,7 +2010,7 @@ hppa_frame_cache (struct frame_info *this_frame, void **this_cache)
 	  {
 	    error (_("Cannot read instruction at %s."),
 		   paddress (gdbarch, pc));
-	    return (*this_cache);
+	    return (struct hppa_frame_cache *) (*this_cache);
 	  }
 
 	inst = extract_unsigned_integer (buf4, sizeof buf4, byte_order);
@@ -2283,7 +2283,7 @@ hppa_frame_cache (struct frame_info *this_frame, void **this_cache)
   if (hppa_debug)
     fprintf_unfiltered (gdb_stdlog, "base=%s }",
       paddress (gdbarch, ((struct hppa_frame_cache *)*this_cache)->base));
-  return (*this_cache);
+  return (struct hppa_frame_cache *) (*this_cache);
 }
 
 static void
@@ -2457,7 +2457,7 @@ hppa_stub_frame_unwind_cache (struct frame_info *this_frame,
   struct unwind_table_entry *u;
 
   if (*this_cache)
-    return *this_cache;
+    return (struct hppa_stub_unwind_cache *) *this_cache;
 
   info = FRAME_OBSTACK_ZALLOC (struct hppa_stub_unwind_cache);
   *this_cache = info;

@@ -1100,7 +1100,7 @@ sparc_frame_cache (struct frame_info *this_frame, void **this_cache)
   struct sparc_frame_cache *cache;
 
   if (*this_cache)
-    return *this_cache;
+    return (struct sparc_frame_cache *) *this_cache;
 
   cache = sparc_alloc_frame_cache ();
   *this_cache = cache;
@@ -1158,7 +1158,7 @@ sparc32_frame_cache (struct frame_info *this_frame, void **this_cache)
   struct symbol *sym;
 
   if (*this_cache)
-    return *this_cache;
+    return (struct sparc_frame_cache *) *this_cache;
 
   cache = sparc_frame_cache (this_frame, this_cache);
 

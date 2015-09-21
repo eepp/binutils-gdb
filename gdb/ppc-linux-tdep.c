@@ -1259,7 +1259,7 @@ struct ppu2spu_cache
 static struct gdbarch *
 ppu2spu_prev_arch (struct frame_info *this_frame, void **this_cache)
 {
-  struct ppu2spu_cache *cache = *this_cache;
+  struct ppu2spu_cache *cache = (struct ppu2spu_cache *) *this_cache;
   return get_regcache_arch (cache->regcache);
 }
 
@@ -1267,7 +1267,7 @@ static void
 ppu2spu_this_id (struct frame_info *this_frame,
 		 void **this_cache, struct frame_id *this_id)
 {
-  struct ppu2spu_cache *cache = *this_cache;
+  struct ppu2spu_cache *cache = (struct ppu2spu_cache *) *this_cache;
   *this_id = cache->frame_id;
 }
 
@@ -1275,7 +1275,7 @@ static struct value *
 ppu2spu_prev_register (struct frame_info *this_frame,
 		       void **this_cache, int regnum)
 {
-  struct ppu2spu_cache *cache = *this_cache;
+  struct ppu2spu_cache *cache = (struct ppu2spu_cache *) *this_cache;
   struct gdbarch *gdbarch = get_regcache_arch (cache->regcache);
   gdb_byte *buf;
 
@@ -1384,7 +1384,7 @@ ppu2spu_sniffer (const struct frame_unwind *self,
 static void
 ppu2spu_dealloc_cache (struct frame_info *self, void *this_cache)
 {
-  struct ppu2spu_cache *cache = this_cache;
+  struct ppu2spu_cache *cache = (struct ppu2spu_cache *) this_cache;
   regcache_xfree (cache->regcache);
 }
 

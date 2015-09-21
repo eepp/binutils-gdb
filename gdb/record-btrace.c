@@ -1421,7 +1421,7 @@ btrace_get_frame_function (struct frame_info *frame)
   if (slot == NULL)
     return NULL;
 
-  cache = *slot;
+  cache = (const struct btrace_frame_cache *) *slot;
   return cache->bfun;
 }
 
@@ -1434,7 +1434,7 @@ record_btrace_frame_unwind_stop_reason (struct frame_info *this_frame,
   const struct btrace_frame_cache *cache;
   const struct btrace_function *bfun;
 
-  cache = *this_cache;
+  cache = (const struct btrace_frame_cache *) *this_cache;
   bfun = cache->bfun;
   gdb_assert (bfun != NULL);
 
@@ -1454,7 +1454,7 @@ record_btrace_frame_this_id (struct frame_info *this_frame, void **this_cache,
   const struct btrace_function *bfun;
   CORE_ADDR code, special;
 
-  cache = *this_cache;
+  cache = (const struct btrace_frame_cache *) *this_cache;
 
   bfun = cache->bfun;
   gdb_assert (bfun != NULL);
@@ -1493,7 +1493,7 @@ record_btrace_frame_prev_register (struct frame_info *this_frame,
     throw_error (NOT_AVAILABLE_ERROR,
 		 _("Registers are not available in btrace record history"));
 
-  cache = *this_cache;
+  cache = (const struct btrace_frame_cache *) *this_cache;
   bfun = cache->bfun;
   gdb_assert (bfun != NULL);
 
@@ -1616,7 +1616,7 @@ record_btrace_frame_dealloc_cache (struct frame_info *self, void *this_cache)
   struct btrace_frame_cache *cache;
   void **slot;
 
-  cache = this_cache;
+  cache = (struct btrace_frame_cache *) this_cache;
 
   slot = htab_find_slot (bfcache, cache, NO_INSERT);
   gdb_assert (slot != NULL);

@@ -890,7 +890,7 @@ alpha_sigtramp_frame_unwind_cache (struct frame_info *this_frame,
   struct gdbarch_tdep *tdep;
 
   if (*this_prologue_cache)
-    return *this_prologue_cache;
+    return (struct alpha_sigtramp_unwind_cache *) *this_prologue_cache;
 
   info = FRAME_OBSTACK_ZALLOC (struct alpha_sigtramp_unwind_cache);
   *this_prologue_cache = info;
@@ -1240,7 +1240,7 @@ alpha_heuristic_frame_unwind_cache (struct frame_info *this_frame,
   int frame_reg, frame_size, return_reg, reg;
 
   if (*this_prologue_cache)
-    return *this_prologue_cache;
+    return (struct alpha_heuristic_unwind_cache *) *this_prologue_cache;
 
   info = FRAME_OBSTACK_ZALLOC (struct alpha_heuristic_unwind_cache);
   *this_prologue_cache = info;
