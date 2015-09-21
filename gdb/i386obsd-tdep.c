@@ -141,7 +141,7 @@ i386obsd_aout_supply_regset (const struct regset *regset,
 {
   struct gdbarch *gdbarch = get_regcache_arch (regcache);
   const struct gdbarch_tdep *tdep = gdbarch_tdep (gdbarch);
-  const gdb_byte *gregs = regs;
+  const gdb_byte *gregs = (const gdb_byte *) regs;
 
   gdb_assert (len >= tdep->sizeof_gregset + I387_SIZEOF_FSAVE);
 

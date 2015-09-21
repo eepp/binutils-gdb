@@ -306,7 +306,8 @@ struct msp430_get_opcode_byte_handle
 static int
 msp430_get_opcode_byte (void *handle)
 {
-  struct msp430_get_opcode_byte_handle *opcdata = handle;
+  struct msp430_get_opcode_byte_handle *opcdata =
+    (struct msp430_get_opcode_byte_handle *) handle;
   int status;
   gdb_byte byte;
 

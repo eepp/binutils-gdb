@@ -2464,7 +2464,7 @@ aarch64_pseudo_write (struct gdbarch *gdbarch, struct regcache *regcache,
 static struct value *
 value_of_aarch64_user_reg (struct frame_info *frame, const void *baton)
 {
-  const int *reg_p = baton;
+  const int *reg_p = (const int *) baton;
 
   return value_of_register (*reg_p, frame);
 }

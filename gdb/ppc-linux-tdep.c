@@ -373,7 +373,8 @@ ppc_linux_supply_gregset (const struct regset *regset,
 			  struct regcache *regcache,
 			  int regnum, const void *gregs, size_t len)
 {
-  const struct ppc_reg_offsets *offsets = regset->regmap;
+  const struct ppc_reg_offsets *offsets =
+    (const struct ppc_reg_offsets *) regset->regmap;
 
   ppc_supply_gregset (regset, regcache, regnum, gregs, len);
 
@@ -381,13 +382,13 @@ ppc_linux_supply_gregset (const struct regset *regset,
     {
       /* "orig_r3" is stored 2 slots after "pc".  */
       if (regnum == -1 || regnum == PPC_ORIG_R3_REGNUM)
-	ppc_supply_reg (regcache, PPC_ORIG_R3_REGNUM, gregs,
+	ppc_supply_reg (regcache, PPC_ORIG_R3_REGNUM, (const gdb_byte *) gregs,
 			offsets->pc_offset + 2 * offsets->gpr_size,
 			offsets->gpr_size);
 
       /* "trap" is stored 8 slots after "pc".  */
       if (regnum == -1 || regnum == PPC_TRAP_REGNUM)
-	ppc_supply_reg (regcache, PPC_TRAP_REGNUM, gregs,
+	ppc_supply_reg (regcache, PPC_TRAP_REGNUM, (const gdb_byte *) gregs,
 			offsets->pc_offset + 8 * offsets->gpr_size,
 			offsets->gpr_size);
     }
@@ -398,7 +399,8 @@ ppc_linux_collect_gregset (const struct regset *regset,
 			   const struct regcache *regcache,
 			   int regnum, void *gregs, size_t len)
 {
-  const struct ppc_reg_offsets *offsets = regset->regmap;
+  const struct ppc_reg_offsets *offsets =
+    (const struct ppc_reg_offsets *) regset->regmap;
 
   /* Clear areas in the linux gregset not written elsewhere.  */
   if (regnum == -1)
@@ -410,13 +412,13 @@ ppc_linux_collect_gregset (const struct regset *regset,
     {
       /* "orig_r3" is stored 2 slots after "pc".  */
       if (regnum == -1 || regnum == PPC_ORIG_R3_REGNUM)
-	ppc_collect_reg (regcache, PPC_ORIG_R3_REGNUM, gregs,
+	ppc_collect_reg (regcache, PPC_ORIG_R3_REGNUM, (gdb_byte *) gregs,
 			 offsets->pc_offset + 2 * offsets->gpr_size,
 			 offsets->gpr_size);
 
       /* "trap" is stored 8 slots after "pc".  */
       if (regnum == -1 || regnum == PPC_TRAP_REGNUM)
-	ppc_collect_reg (regcache, PPC_TRAP_REGNUM, gregs,
+	ppc_collect_reg (regcache, PPC_TRAP_REGNUM, (gdb_byte *) gregs,
 			 offsets->pc_offset + 8 * offsets->gpr_size,
 			 offsets->gpr_size);
     }
@@ -1298,7 +1300,7 @@ struct ppu2spu_data
 static enum register_status
 ppu2spu_unwind_register (void *src, int regnum, gdb_byte *buf)
 {
-  struct ppu2spu_data *data = src;
+  struct ppu2spu_data *data = (struct ppu2spu_data *) src;
   enum bfd_endian byte_order = gdbarch_byte_order (data->gdbarch);
 
   if (regnum >= 0 && regnum < SPU_NUM_GPRS)
@@ -1350,7 +1352,7 @@ ppu2spu_sniffer (const struct frame_unwind *self,
       info.bfd_arch_info = bfd_lookup_arch (bfd_arch_spu, bfd_mach_spu);
       info.byte_order = BFD_ENDIAN_BIG;
       info.osabi = GDB_OSABI_LINUX;
-      info.tdep_info = (void *) &data.id;
+      info.tdep_info = (struct gdbarch_tdep_info *) &data.id;
       data.gdbarch = gdbarch_find_by_info (info);
       if (!data.gdbarch)
 	return 0;
@@ -1633,7 +1635,8 @@ ppc_linux_init_abi (struct gdbarch_info info,
                     struct gdbarch *gdbarch)
 {
   struct gdbarch_tdep *tdep = gdbarch_tdep (gdbarch);
-  struct tdesc_arch_data *tdesc_data = (void *) info.tdep_info;
+  struct tdesc_arch_data *tdesc_data =
+    (struct tdesc_arch_data *) info.tdep_info;
   static const char *const stap_integer_prefixes[] = { "i", NULL };
   static const char *const stap_register_indirection_prefixes[] = { "(",
 								    NULL };

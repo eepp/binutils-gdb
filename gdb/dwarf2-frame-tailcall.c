@@ -68,7 +68,7 @@ struct tailcall_cache
 static hashval_t
 cache_hash (const void *arg)
 {
-  const struct tailcall_cache *cache = arg;
+  const struct tailcall_cache *cache = (const struct tailcall_cache *) arg;
 
   return htab_hash_pointer (cache->next_bottom_frame);
 }
@@ -78,8 +78,8 @@ cache_hash (const void *arg)
 static int
 cache_eq (const void *arg1, const void *arg2)
 {
-  const struct tailcall_cache *cache1 = arg1;
-  const struct tailcall_cache *cache2 = arg2;
+  const struct tailcall_cache *cache1 = (const struct tailcall_cache *) arg1;
+  const struct tailcall_cache *cache2 = (const struct tailcall_cache *) arg2;
 
   return cache1->next_bottom_frame == cache2->next_bottom_frame;
 }
@@ -160,7 +160,7 @@ cache_find (struct frame_info *fi)
   if (slot == NULL)
     return NULL;
 
-  cache = *slot;
+  cache = (struct tailcall_cache *) *slot;
   gdb_assert (cache != NULL);
   return cache;
 }

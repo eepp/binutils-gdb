@@ -160,9 +160,7 @@ record_btrace_enable_warn (struct thread_info *tp)
 static void
 record_btrace_disable_callback (void *arg)
 {
-  struct thread_info *tp;
-
-  tp = arg;
+  struct thread_info *tp = (struct thread_info *) arg;
 
   btrace_disable (tp);
 }
@@ -1370,7 +1368,8 @@ static htab_t bfcache;
 static hashval_t
 bfcache_hash (const void *arg)
 {
-  const struct btrace_frame_cache *cache = arg;
+  const struct btrace_frame_cache *cache =
+    (const struct btrace_frame_cache *) arg;
 
   return htab_hash_pointer (cache->frame);
 }
@@ -1380,8 +1379,10 @@ bfcache_hash (const void *arg)
 static int
 bfcache_eq (const void *arg1, const void *arg2)
 {
-  const struct btrace_frame_cache *cache1 = arg1;
-  const struct btrace_frame_cache *cache2 = arg2;
+  const struct btrace_frame_cache *cache1 =
+    (const struct btrace_frame_cache *) arg1;
+  const struct btrace_frame_cache *cache2 =
+    (const struct btrace_frame_cache *) arg2;
 
   return cache1->frame == cache2->frame;
 }

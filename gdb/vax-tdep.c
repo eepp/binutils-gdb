@@ -71,7 +71,7 @@ static void
 vax_supply_gregset (const struct regset *regset, struct regcache *regcache,
 		    int regnum, const void *gregs, size_t len)
 {
-  const gdb_byte *regs = gregs;
+  const gdb_byte *regs = (const gdb_byte *) gregs;
   int i;
 
   for (i = 0; i < VAX_NUM_REGS; i++)

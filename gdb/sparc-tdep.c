@@ -1895,7 +1895,7 @@ sparc32_supply_gregset (const struct sparc_gregmap *gregmap,
 			struct regcache *regcache,
 			int regnum, const void *gregs)
 {
-  const gdb_byte *regs = gregs;
+  const gdb_byte *regs = (const gdb_byte *) gregs;
   gdb_byte zero[4] = { 0 };
   int i;
 
@@ -1960,7 +1960,7 @@ sparc32_collect_gregset (const struct sparc_gregmap *gregmap,
 			 const struct regcache *regcache,
 			 int regnum, void *gregs)
 {
-  gdb_byte *regs = gregs;
+  gdb_byte *regs = (gdb_byte *) gregs;
   int i;
 
   if (regnum == SPARC32_PSR_REGNUM || regnum == -1)
@@ -2015,7 +2015,7 @@ sparc32_supply_fpregset (const struct sparc_fpregmap *fpregmap,
 			 struct regcache *regcache,
 			 int regnum, const void *fpregs)
 {
-  const gdb_byte *regs = fpregs;
+  const gdb_byte *regs = (const gdb_byte *) fpregs;
   int i;
 
   for (i = 0; i < 32; i++)
@@ -2035,7 +2035,7 @@ sparc32_collect_fpregset (const struct sparc_fpregmap *fpregmap,
 			  const struct regcache *regcache,
 			  int regnum, void *fpregs)
 {
-  gdb_byte *regs = fpregs;
+  gdb_byte *regs = (gdb_byte *) fpregs;
   int i;
 
   for (i = 0; i < 32; i++)

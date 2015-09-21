@@ -223,8 +223,8 @@ hppa_init_objfile_priv_data (struct objfile *objfile)
 static int
 compare_unwind_entries (const void *arg1, const void *arg2)
 {
-  const struct unwind_table_entry *a = arg1;
-  const struct unwind_table_entry *b = arg2;
+  const struct unwind_table_entry *a = (const struct unwind_table_entry *) arg1;
+  const struct unwind_table_entry *b = (const struct unwind_table_entry *) arg2;
 
   if (a->region_start > b->region_start)
     return 1;
@@ -504,14 +504,18 @@ find_unwind_entry (CORE_ADDR pc)
   {
     struct hppa_unwind_info *ui;
     ui = NULL;
-    priv = objfile_data (objfile, hppa_objfile_priv_data);
+    priv =
+      (struct hppa_objfile_private *) objfile_data (objfile,
+						    hppa_objfile_priv_data);
     if (priv)
       ui = ((struct hppa_objfile_private *) priv)->unwind_info;
 
     if (!ui)
       {
 	read_unwind_info (objfile);
-        priv = objfile_data (objfile, hppa_objfile_priv_data);
+        priv =
+	  (struct hppa_objfile_private *) objfile_data (objfile,
+							hppa_objfile_priv_data);
 	if (priv == NULL)
 	  error (_("Internal error reading unwind information."));
         ui = ((struct hppa_objfile_private *) priv)->unwind_info;

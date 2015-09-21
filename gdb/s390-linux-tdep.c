@@ -1168,7 +1168,7 @@ static void
 s390_check_for_saved (void *data_untyped, pv_t addr,
 		      CORE_ADDR size, pv_t value)
 {
-  struct s390_prologue_data *data = data_untyped;
+  struct s390_prologue_data *data = (struct s390_prologue_data *) data_untyped;
   int i, offset;
 
   if (!pv_is_register (addr, S390_SP_REGNUM))

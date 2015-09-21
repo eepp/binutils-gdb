@@ -851,7 +851,8 @@ opc_reg_to_gdb_regnum (int opcreg)
 static int
 rl78_get_opcode_byte (void *handle)
 {
-  struct rl78_get_opcode_byte_handle *opcdata = handle;
+  struct rl78_get_opcode_byte_handle *opcdata =
+    (struct rl78_get_opcode_byte_handle *) handle;
   int status;
   gdb_byte byte;
 

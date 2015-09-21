@@ -351,7 +351,7 @@ m32r_linux_supply_gregset (const struct regset *regset,
 			   struct regcache *regcache, int regnum,
 			   const void *gregs, size_t size)
 {
-  const gdb_byte *regs = gregs;
+  const gdb_byte *regs = (const gdb_byte *) gregs;
   enum bfd_endian byte_order =
     gdbarch_byte_order (get_regcache_arch (regcache));
   ULONGEST psw, bbpsw;
@@ -394,7 +394,7 @@ m32r_linux_collect_gregset (const struct regset *regset,
 			    const struct regcache *regcache,
 			    int regnum, void *gregs, size_t size)
 {
-  gdb_byte *regs = gregs;
+  gdb_byte *regs = (gdb_byte *) gregs;
   int i;
   enum bfd_endian byte_order =
     gdbarch_byte_order (get_regcache_arch (regcache));

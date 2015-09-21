@@ -205,7 +205,7 @@ static void
 mips_sde_elf_osabi_sniff_abi_tag_sections (bfd *abfd, asection *sect,
 					   void *obj)
 {
-  enum gdb_osabi *os_ident_ptr = obj;
+  enum gdb_osabi *os_ident_ptr = (enum gdb_osabi *) obj;
   const char *name;
 
   name = bfd_get_section_name (abfd, sect);

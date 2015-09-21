@@ -200,7 +200,8 @@ struct rx_get_opcode_byte_handle
 static int
 rx_get_opcode_byte (void *handle)
 {
-  struct rx_get_opcode_byte_handle *opcdata = handle;
+  struct rx_get_opcode_byte_handle *opcdata =
+    (struct rx_get_opcode_byte_handle *) handle;
   int status;
   gdb_byte byte;
 
