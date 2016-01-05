@@ -2325,8 +2325,7 @@ AC_DEFINE(GDB_DEFAULT_HOST_CHARSET, "UTF-8",
 GDB_AC_TRANSFORM([gdb], [GDB_TRANSFORM_NAME])
 GDB_AC_TRANSFORM([gcore], [GCORE_TRANSFORM_NAME])
 AC_CONFIG_FILES([gcore], [chmod +x gcore])
-
-AC_OUTPUT(Makefile gdb-gdb.gdb doc/Makefile data-directory/Makefile,
+AC_CONFIG_FILES([Makefile gdb-gdb.gdb doc/Makefile data-directory/Makefile],
 [
 case x$CONFIG_HEADERS in
 xconfig.h:config.in)
@@ -2334,4 +2333,4 @@ echo > stamp-h ;;
 esac
 ])
 
-exit 0
+AC_OUTPUT
