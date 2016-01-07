@@ -203,11 +203,12 @@ namespace eval GenPerfTest {
 	}
 
 	set program_name [file rootname $test_description_exp]
-	set workers_dir "$objdir/gdb.perf/workers/$program_name"
+	set workers_dir [standard_output_file "workers"]
 	file mkdir $workers_dir
 
 	set nr_workers $PERF_TEST_COMPILE_PARALLELISM
 	verbose -log "gen_worker_files: $test_description_exp $nr_workers workers"
+	verbose -log "gen_worker_files: workers_dir is ${workers_dir}"
 
 	for { set i 0 } { $i < $nr_workers } { incr i } {
 	    set file_name "${workers_dir}/${program_name}-${i}.worker"
