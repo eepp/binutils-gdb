@@ -19,6 +19,8 @@
 # WORKER is set by the makefile and is
 # "{program_name}/{program_name}-{worker_nr}".
 
+verbose -log "build-piece.exp ran with WORKER=$WORKER"
+
 regexp "^\(.+\)/\(.+\)-\(\[0-9\]+\)$" $WORKER entire_match PROGRAM_NAME pname2 WORKER_NR
 
 if { ![info exists entire_match] || $entire_match != $WORKER } {
