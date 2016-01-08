@@ -456,6 +456,12 @@ write_inferior_uinteger (CORE_ADDR symaddr, unsigned int val)
   return write_inferior_memory (symaddr, (unsigned char *) &val, sizeof (val));
 }
 
+static int
+write_inferior_char (CORE_ADDR symaddr, char val)
+{
+  return write_inferior_memory (symaddr, (unsigned char *) &val, sizeof (val));
+}
+
 static CORE_ADDR target_malloc (ULONGEST size);
 static int write_inferior_data_ptr (CORE_ADDR where, CORE_ADDR ptr);
 
@@ -2652,7 +2658,7 @@ cmd_qtdv (char *own_buf)
 }
 
 static void
-cmd_qtenable_disable (char *own_buf, int enable)
+cmd_qtenable_disable (char *own_buf, int8_t enable)
 {
   char *packet = own_buf;
   ULONGEST num, addr;
@@ -2696,7 +2702,7 @@ cmd_qtenable_disable (char *own_buf, int enable)
 	      return;
 	    }
 	  
-	  ret = write_inferior_integer (obj_addr, enable);
+	  ret = write_inferior_char (obj_addr, enable);
 	  done_accessing_memory ();
 	  
 	  if (ret)
