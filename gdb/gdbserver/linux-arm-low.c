@@ -21,6 +21,7 @@
 #include "arch/arm.h"
 #include "arch/arm-linux.h"
 #include "arch/arm-get-next-pcs.h"
+#include "arch/arm-insn.h"
 #include "linux-aarch32-low.h"
 
 #include <sys/uio.h>
@@ -1478,6 +1479,479 @@ arm_relocate_insn_thumb32 (struct relocate_insn *rel,
     {
       append_insn_16 (rel->to, insn1);
       append_insn_16 (rel->to, insn2);
+    }
+}
+
+static int
+copy_instruction_arm (CORE_ADDR *to, CORE_ADDR from)
+{
+  struct relocate_insn rel;
+  CORE_ADDR before = *to;
+  uint32_t insn;
+
+  rel.oldloc = from;
+  rel.to = to;
+  rel.result = 0;
+
+  if (read_inferior_memory (from, (unsigned char *) &insn, sizeof (insn)) != 0)
+      return 1;
+
+  arm_relocate_insn_arm (&rel, insn);
+
+  return (before == *to) ? -1 : 1;
+}
+
+static int
+copy_instruction_thumb32 (CORE_ADDR *to, CORE_ADDR from)
+{
+  struct relocate_insn rel;
+  CORE_ADDR before = *to;
+  uint16_t insn1, insn2;
+
+  rel.oldloc = from;
+  rel.to = to;
+  rel.result = 0;
+
+  if (read_inferior_memory (from, (unsigned char *) &insn1,
+			    sizeof (insn1)) != 0)
+      return 1;
+
+  if (read_inferior_memory (from + sizeof (insn1), (unsigned char *) &insn2,
+			    sizeof (insn2)) != 0)
+      return 1;
+
+  arm_relocate_insn_thumb32 (&rel, insn1, insn2);
+
+  return (before == *to) ? -1 : 1;
+}
+
+static int
+arm_install_fast_tracepoint_jump_pad_arm (struct tracepoint *tp,
+					  CORE_ADDR collector,
+					  CORE_ADDR lockaddr,
+					  CORE_ADDR *jump_entry,
+					  CORE_ADDR *trampoline,
+					  ULONGEST *trampoline_size,
+					  unsigned char *jjump_pad_insn,
+					  ULONGEST *jjump_pad_insn_size,
+					  char *err)
+{
+  unsigned char buf[0x100];
+  CORE_ADDR buildaddr = *jump_entry;
+  const struct target_desc * tdesc = current_process ()->tdesc;
+  const int r0 = find_regno (tdesc, "r0");
+  const int r2 = find_regno (tdesc, "r2");
+  const int r4 = find_regno (tdesc, "r4");
+  const uint32_t kuser_get_tls = 0xffff0fe0;
+  const uint32_t push_r0 = 0xe52d0004;
+  uint32_t *ptr = (uint32_t *) buf;
+
+  /* Push VFP registers if available.  */
+  if (tdesc == tdesc_arm_with_neon || tdesc == tdesc_arm_with_vfpv3)
+    {
+      *ptr++ = 0xed6d0b20;	/* vpush {d16-d31} */
+      *ptr++ = 0xed2d0b20;	/* vpush {d0-d15} */
+    }
+  else if (tdesc == tdesc_arm_with_vfpv2)
+    *ptr++ = 0xed2d0b20;	/* vpush {d0-d15} */
+
+  /* Function prologue, push common registers on the stack.  */
+  *ptr++ = 0xe92d5fff;            /* push { r0-r12,lr } */
+
+  /* Push current processor state register (CPSR) on the stack.  */
+  *ptr++ = 0xe10f0000;            /* mrs r0,cpsr */
+  *ptr++ = push_r0;               /* push r0 */
+
+  /* Push replaced instruction address on the stack.  */
+  ptr = arm_emit_arm_load_insn (ptr, r0, (uint32_t) tp->address);
+  *ptr++ = push_r0;               /* push r0 (orig pc)  */
+
+  /* Save current stack pointer for the REGS parameters of the gdb_collect
+     call later. */
+  *ptr++ = 0xe1a0100d;            /* mov r1, sp (regs:arg2)  */
+
+  /* Push current thread's local storage location on the stack.  */
+  ptr = arm_emit_arm_load_insn (ptr, r0, kuser_get_tls);
+  ptr = arm_emit_arm_blx_insn (ptr, r0);
+  *ptr++ = push_r0;               /* push r0 (tls)  */
+
+  /* Push obj_addr_on_target on the stack.  */
+  ptr = arm_emit_arm_load_insn (ptr, r0, (uint32_t) tp->obj_addr_on_target);
+  *ptr++ = push_r0;               /* push r0 (tpoint:arg1)  */
+
+  ptr = arm_emit_arm_load_insn (ptr, r2, (uint32_t) collector);
+  ptr = arm_emit_arm_load_insn (ptr, r4, (uint32_t) lockaddr);
+
+  /*
+   * At this point, the stack looks like:
+   *           bottom
+   * +-------------------------------------------------+
+   * |  saved lr                                       |
+   * |  saved r12                                      |
+   * |  ...                                            |
+   * |  saved r0                                       |
+   * |  saved cpsr                                     |
+   * |  tp->address                                    | <- r1
+   * |  tls  (collecting_t.thread_area)                |
+   * |  tp->obj_addr_on_target  (collecting_t.tpoint)  | <- r5
+   * +-------------------------------------------------+
+   *            top
+   */
+
+  /* Save current sp value, so we can restore it after the call to
+     gdb_collect.  */
+  *ptr++ = 0xe1a0500d;            /*    mov r5, sp  */
+
+  /* Spin lock on lockaddr (r4 contains address of lock) */
+
+  /* This is a full memory barrier.  */
+  *ptr++ = 0xf57ff05f;            /* 1: dmb sy (memory barrier)  */
+  /* Load lock value in r3 */
+  *ptr++ = 0xe1943f9f;            /* 2: ldrex r3, [r4]  */
+  /* Is it already locked?  */
+  *ptr++ = 0xe3530000;            /*    cmp r3, #0  */
+  /* If so, start over. */
+  *ptr++ = 0x1a000002;            /*    bne 3  */
+  /* If not, write a value (our saved stack pointer in r5) to the location.  */
+  *ptr++ = 0xe184ef95;            /*    strex r14, r5, [r4]  */
+  /* Did the write succeed?  */
+  *ptr++ = 0xe35e0000;            /*    cmp r14, #0  */
+  /* If not, start over.  */
+  *ptr++ = 0x1afffff9;            /*    bne 2  */
+  /* A full memory barrier again.  */
+  *ptr++ = 0xf57ff05f;            /* 3: dmb sy  */
+  *ptr++ = 0x1afffff6;            /*    bne 1  */
+
+  /* Round the stack to a multiple of 8 (section 5.2.1.2) */
+  *ptr++ = 0xe3c53007;            /* bic r3, r5, 7  */
+  *ptr++ = 0xe1a0d003;            /* mov sp, r3  */
+
+  /* Call collector (obj_addr_on_target, regs);
+	  r2 -^      r0 -^             r1 -^  */
+  ptr = arm_emit_arm_blx_insn (ptr, r2);
+
+  /* Restore sp to pre-call/rounding value.  */
+  *ptr++ = 0xe1a0d005;            /* mov sp, r5  */
+
+  /* Unlock the spin lock (by writing 0 to it).  */
+  *ptr++ = 0xe3a03000;            /* mov r3, #0  */
+  *ptr++ = 0xe5843000;            /* str r3, [r4]  */
+
+  /* Pop everything that was saved. */
+
+  /* tpoint, tls, tpaddr */
+  *ptr++ = 0xe28dd00c;            /* add sp, sp, #12  */
+
+  /* cpsr */
+  *ptr++ = 0xe49d0004;            /* pop r0  */
+  *ptr++ = 0xe12cf000;            /* msr cpsr,r0  */
+
+  /* r0-r12 and lr */
+  *ptr++ = 0xe8bd5fff;            /* pop { r0-r12,lr }  */
+
+  /* Pop VFP registers.  */
+  if (tdesc == tdesc_arm_with_neon || tdesc == tdesc_arm_with_vfpv3)
+    {
+      *ptr++ = 0xecfd0b20;	/* vpop {d16-d31} */
+      *ptr++ = 0xecbd0b20;	/* vpop	{d0-d15} */
+    }
+  else if (tdesc == tdesc_arm_with_vfpv2)
+    *ptr++ = 0xecbd0b20;	/* vpop	{d0-d15} */
+
+  append_insns (&buildaddr, (uint32_t) ptr - (uint32_t) buf, buf);
+
+  tp->adjusted_insn_addr = buildaddr;
+  if (copy_instruction_arm (&buildaddr, tp->address) < 0)
+  {
+    strcpy (err, "E.Cannot move instruction to jump_pad. "
+	    "Not possible to relocate.");
+    return 1;
+  }
+  tp->adjusted_insn_addr = buildaddr;
+
+  /* Possible improvements:
+   This branch can be made non-relative:
+   B <mem location>:
+   push    {r0,r1}
+   movw    r0, #<mem location>
+   movt    r0, #<mem location>
+   str     r0, [sp, #4]
+   pop     {r0,pc}  */
+  if (!arm_arm_is_reachable (buildaddr, tp->address + 4))
+  {
+    strcpy (err, "E.Cannot construct valid branch "
+	    "instruction for fast tracepoint."
+	    " Too long relative branch.");
+    return 1;
+  }
+  /* b <tp_addr + 4>  */
+  (void) arm_emit_arm_branch_insn ((uint32_t *) buf, buildaddr, tp->address + 4);
+  append_insns (&buildaddr, 4, buf);
+
+  /* write tp instr.  */
+  if (!arm_arm_is_reachable (tp->address, *jump_entry))
+  {
+    strcpy (err, "E.Cannot construct valid branch "
+	    "instruction for fast tracepoint."
+	    " Too long relative branch.");
+    return 1;
+  }
+  (void) arm_emit_arm_branch_insn ((uint32_t *) jjump_pad_insn, tp->address, *jump_entry);
+  *jjump_pad_insn_size = 4;
+  *jump_entry = buildaddr;
+
+  return 0;
+}
+
+static int
+arm_install_fast_tracepoint_jump_pad_thumb2 (struct tracepoint *tp,
+					    CORE_ADDR collector,
+					    CORE_ADDR lockaddr,
+					    CORE_ADDR *jump_entry,
+					    CORE_ADDR *trampoline,
+					    ULONGEST *trampoline_size,
+					    unsigned char *jjump_pad_insn,
+					    ULONGEST *jjump_pad_insn_size,
+					    char *err)
+{
+  unsigned char buf[0x100];
+  CORE_ADDR buildaddr = *jump_entry;
+  const struct target_desc * tdesc = current_process ()->tdesc;
+  const int r0 = find_regno (tdesc, "r0");
+  const int r2 = find_regno (tdesc, "r2");
+  const int r4 = find_regno (tdesc, "r4");
+  const uint32_t kuser_get_tls = 0xffff0fe0;
+  uint16_t *ptr = (uint16_t *) buf;
+  const uint16_t push_r0 = 0xb401;
+
+  /* Push VFP registers if available.  */
+  if (tdesc == tdesc_arm_with_neon || tdesc == tdesc_arm_with_vfpv3)
+    {
+      *ptr++ = 0xed6d;	/* vpush {d16-d31} */
+      *ptr++ = 0x0b20;
+      *ptr++ = 0xed2d;	/* vpush {d0-d15} */
+      *ptr++ = 0x0b20;
+    }
+  else if (tdesc == tdesc_arm_with_vfpv2)
+    {
+      *ptr++ = 0xed2d;	/* vpush {d0-d15} */
+      *ptr++ = 0x0b20;
+    }
+
+  /* Function prologue, push common registers on the stack.  */
+  *ptr++ = 0xe92d;            /* push { r0-r12,lr }  */
+  *ptr++ = 0x5fff;
+
+  /* Push current processor state register (CPSR) on the stack.  */
+  *ptr++ = 0xf3ef;            /* mrs r0,cpsr  */
+  *ptr++ = 0x8000;
+  *ptr++ = push_r0;           /* push r0  */
+
+  /* Push replaced instruction address on the stack.  */
+  ptr = arm_emit_thumb_load_insn (ptr, r0, (uint32_t) tp->address);
+  *ptr++ = push_r0;           /* push r0 (orig pc)  */
+
+  /* Save current stack pointer for the REGS parameters of the gdb_collect
+     call later. */
+  *ptr++ = 0x4669;            /* mov r1, sp (regs:arg2)  */
+
+  /* Push current thread's local storage location on the stack.  */
+  ptr = arm_emit_thumb_load_insn (ptr, r0, kuser_get_tls);
+  ptr = arm_emit_thumb_blx_insn (ptr, r0);
+  *ptr++ = push_r0;           /* push r0 (tls)  */
+
+  /* Push obj_addr_on_target on the stack.  */
+  ptr = arm_emit_thumb_load_insn (ptr, r0, (uint32_t) tp->obj_addr_on_target);
+  *ptr++ = push_r0;           /* push r0 (tpoint:arg1)  */
+
+  ptr = arm_emit_thumb_load_insn (ptr, r2, (uint32_t) collector);
+  ptr = arm_emit_thumb_load_insn (ptr, r4, (uint32_t) lockaddr);
+
+  /*
+   * At this point, the stack looks like:
+   *           bottom
+   * +-------------------------------------------------+
+   * |  saved lr                                       |
+   * |  saved r12                                      |
+   * |  ...                                            |
+   * |  saved r0                                       |
+   * |  saved cpsr                                     |
+   * |  tp->address                                    | <- r1
+   * |  tls  (collecting_t.thread_area)                |
+   * |  tp->obj_addr_on_target  (collecting_t.tpoint)  | <- r5
+   * +-------------------------------------------------+
+   *            top
+   */
+
+  /* Save current sp value, so we can restore it after the call to
+     gdb_collect.  */
+  *ptr++ = 0x466d;		/*    mov r5, sp  */
+
+  /* Spin lock on lockaddr (r4 contains address of lock) */
+
+  /* This is a full memory barrier.  */
+  *ptr++ = 0xf3bf;		/* 1: dmb sy  */
+  *ptr++ = 0x8f5f;
+
+  /* Load lock value in r3 */
+  *ptr++ = 0xe854;		/* 2: ldrex   r3, [r4]	*/
+  *ptr++ = 0x3f00;
+
+  /* Is it already locked?  */
+  *ptr++ = 0x2b00;		/*    cmp     r3, #0  */
+
+  /* If so, start over. */
+  *ptr++ = 0xd104;		/*    bne.n   3	 */
+
+  /* If not, write a value (our saved stack pointer in r5) to the location.  */
+  *ptr++ = 0xe844;		/*    strex   r14, r5, [r4]  */
+  *ptr++ = 0x5e00;
+
+  /* Did the write succeed?  */
+  *ptr++ = 0xf1be;		/*    cmp.w   r14, #0  */
+  *ptr++ = 0x0f00;
+
+  /* If not, start over.  */
+  *ptr++ = 0xd1f6;		/*    bne.n   2	 */
+
+  /* A full memory barrier again.  */
+  *ptr++ = 0xf3bf;		/* 3. dmb  sy  */
+  *ptr++ = 0x8f5f;
+
+  *ptr++ = 0xd1f1;		/*    bne.n   1	 */
+
+  /* Round the stack to a multiple of 8 (section 5.2.1.2) */
+  *ptr++ = 0xf025;		/* bic r3, r5, 7  */
+  *ptr++ = 0x0307;
+  *ptr++ = 0x469d;		/* mov sp, r3  */
+
+  /* Call collector (obj_addr_on_target, regs);
+		r2 -^      r0 -^             r1 -^  */
+  ptr = arm_emit_thumb_blx_insn (ptr, r2);
+
+  /* Restore sp to pre-call/rounding value.  */
+  *ptr++ = 0x46ad;		/* mov sp, r5  */
+
+  /* Unlock the spin lock (by writing 0 to it).  */
+  *ptr++ = 0xf04f;		/* mov r3, #0  */
+  *ptr++ = 0x0300;
+  *ptr++ = 0x6023;		/* str r3, [r4]	 */
+
+  /* Pop everything that was saved. */
+
+  /* tpoint, tls, tpaddr */
+  *ptr++ = 0xb003;		/* add sp, #12	*/
+
+  /* cpsr */
+  *ptr++ = 0xbc01;		/* pop r0  */
+  *ptr++ = 0xf380;		/* msr cpsr,r0	*/
+  *ptr++ = 0x8c00;
+
+  /* r0-r12 and lr */
+  *ptr++ = 0xe8bd;		/* pop { r0-r12,lr }  */
+  *ptr++ = 0x5fff;
+
+  /* Pop VFP registers.  */
+  if (tdesc == tdesc_arm_with_neon || tdesc == tdesc_arm_with_vfpv3)
+    {
+      *ptr++ = 0xed2d;	/* vpush {d0-d15} */
+      *ptr++ = 0x0b20;
+      *ptr++ = 0xed6d;	/* vpush {d16-d31} */
+      *ptr++ = 0x0b20;
+    }
+  else if (tdesc == tdesc_arm_with_vfpv2)
+    {
+      *ptr++ = 0xed2d;	/* vpush {d0-d15} */
+      *ptr++ = 0x0b20;
+    }
+
+  append_insns (&buildaddr, (uint32_t) ptr - (uint32_t) buf, buf);
+
+  tp->adjusted_insn_addr = buildaddr;
+  if (copy_instruction_thumb32 (&buildaddr, tp->address) < 0)
+    {
+      strcpy (err, "E.Cannot move instruction to jump_pad."
+	      " Not possible to relocate.");
+      return 1;
+    }
+  tp->adjusted_insn_addr_end = buildaddr;
+
+  /* Possible improvements:
+     This branch can be made non-relative:
+     B <mem location>:
+     push	   {r0,r1}
+     movw	   r0, #<mem location>
+     movt	   r0, #<mem location>
+     str	   r0, [sp, #4]
+     pop	   {r0,pc}  */
+  if (!arm_thumb_is_reachable (buildaddr, tp->address + 4))
+    {
+      strcpy (err, "E.Cannot construct valid branch "
+	      "instruction for fast tracepoint."
+	      "Too long relative branch.");
+      return 1;
+    }
+  (void) arm_emit_thumb_branch_insn ((uint16_t *) buf, buildaddr, tp->address + 4);
+  append_insns (&buildaddr, 4, buf);
+
+  /* write tp instr.	*/
+  if (!arm_thumb_is_reachable (tp->address, *jump_entry))
+    {
+      strcpy (err, "E.Cannot construct valid branch "
+	      "instruction for fast tracepoint."
+	      "Too long relative branch.");
+      return 1;
+    }
+  (void) arm_emit_thumb_branch_insn ((uint16_t *) jjump_pad_insn, tp->address, *jump_entry);
+  *jjump_pad_insn_size = 4;
+  *jump_entry = buildaddr;
+
+  return 0;
+}
+
+static int __attribute__((unused))
+arm_install_fast_tracepoint_jump_pad (struct tracepoint *tp,
+				      CORE_ADDR collector,
+				      CORE_ADDR lockaddr,
+				      CORE_ADDR *jump_entry,
+				      CORE_ADDR *trampoline,
+				      ULONGEST *trampoline_size,
+				      unsigned char *jjump_pad_insn,
+				      ULONGEST *jjump_pad_insn_size,
+				      char *err)
+{
+  /* Register usage:
+     r0 - arg1:tpoint   /   tmp
+     r1 - arg2:sp
+     r2 - collector
+     r3 - tmp
+     r4 - lockaddr
+     r5 - saved sp      /   collector_t   */
+
+  if (tp->kind == ARM_BP_KIND_ARM)
+    {
+      return arm_install_fast_tracepoint_jump_pad_arm (tp, collector, lockaddr,
+						       jump_entry, trampoline,
+						       trampoline_size,
+						       jjump_pad_insn,
+						       jjump_pad_insn_size,
+						       err);
+    }
+  else if (tp->kind == ARM_BP_KIND_THUMB2)
+    {
+      return arm_install_fast_tracepoint_jump_pad_thumb2 (tp, collector,
+							  lockaddr, jump_entry,
+							  trampoline,
+							  trampoline_size,
+							  jjump_pad_insn,
+							  jjump_pad_insn_size,
+							  err);
+    }
+  else
+    {
+      strcpy (err, "ECan't put a fast tracepoint jump on a two-bytes Thumb "
+	      "instruction.");
+      return 1;
     }
 }
 
