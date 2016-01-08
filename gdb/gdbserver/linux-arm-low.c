@@ -1564,8 +1564,8 @@ arm_get_min_fast_tracepoint_insn_len (void)
 
 static int
 arm_install_fast_tracepoint_jump_pad_arm (struct tracepoint *tp,
-					  CORE_ADDR collector,
-					  CORE_ADDR lockaddr,
+					  struct ipa_symbol *collector,
+					  struct ipa_symbol *lockaddr,
 					  CORE_ADDR *jump_entry,
 					  CORE_ADDR *trampoline,
 					  ULONGEST *trampoline_size,
@@ -1607,8 +1607,17 @@ arm_install_fast_tracepoint_jump_pad_arm (struct tracepoint *tp,
   ptr = arm_emit_arm_load_insn (ptr, r0, (uint32_t) tp->obj_addr_on_target);
   *ptr++ = push_r0;               /* push r0 (tpoint:arg1)  */
 
-  ptr = arm_emit_arm_load_insn (ptr, r2, (uint32_t) collector);
-  ptr = arm_emit_arm_load_insn (ptr, r4, (uint32_t) lockaddr);
+  if (collector->target_flags & (1 << 0))
+    {
+      /* collector is a thumb function */
+      ptr = arm_emit_arm_load_insn (ptr, r2, (uint32_t) collector->addr | 1);
+    }
+  else
+    {
+      /* collector is an arm function */
+      ptr = arm_emit_arm_load_insn (ptr, r2, (uint32_t) collector->addr);
+    }
+  ptr = arm_emit_arm_load_insn (ptr, r4, (uint32_t) lockaddr->addr);
 
   /*
    * At this point, the stack looks like:
@@ -1724,14 +1733,14 @@ arm_install_fast_tracepoint_jump_pad_arm (struct tracepoint *tp,
 
 static int
 arm_install_fast_tracepoint_jump_pad_thumb2 (struct tracepoint *tp,
-					    CORE_ADDR collector,
-					    CORE_ADDR lockaddr,
-					    CORE_ADDR *jump_entry,
-					    CORE_ADDR *trampoline,
-					    ULONGEST *trampoline_size,
-					    unsigned char *jjump_pad_insn,
-					    ULONGEST *jjump_pad_insn_size,
-					    char *err)
+					     struct ipa_symbol *collector,
+					     struct ipa_symbol *lockaddr,
+					     CORE_ADDR *jump_entry,
+					     CORE_ADDR *trampoline,
+					     ULONGEST *trampoline_size,
+					     unsigned char *jjump_pad_insn,
+					     ULONGEST *jjump_pad_insn_size,
+					     char *err)
 {
   unsigned char buf[0x100];
   CORE_ADDR buildaddr = *jump_entry;
@@ -1769,8 +1778,15 @@ arm_install_fast_tracepoint_jump_pad_thumb2 (struct tracepoint *tp,
   ptr = arm_emit_thumb_load_insn (ptr, r0, (uint32_t) tp->obj_addr_on_target);
   *ptr++ = push_r0;           /* push r0 (tpoint:arg1)  */
 
-  ptr = arm_emit_thumb_load_insn (ptr, r2, (uint32_t) collector);
-  ptr = arm_emit_thumb_load_insn (ptr, r4, (uint32_t) lockaddr);
+  if (collector->target_flags & (1 << 0)) {
+      /* collector is a thumb function */
+      ptr = arm_emit_thumb_load_insn (ptr, r2, (uint32_t) collector->addr | 1);
+  } else {
+      /* collector is an arm function */
+      ptr = arm_emit_thumb_load_insn (ptr, r2, (uint32_t) collector->addr);
+  }
+
+  ptr = arm_emit_thumb_load_insn (ptr, r4, (uint32_t) lockaddr->addr);
 
   /*
    * At this point, the stack looks like:
@@ -1902,8 +1918,8 @@ arm_install_fast_tracepoint_jump_pad_thumb2 (struct tracepoint *tp,
 
 static int
 arm_install_fast_tracepoint_jump_pad (struct tracepoint *tp,
-				      CORE_ADDR collector,
-				      CORE_ADDR lockaddr,
+				      struct ipa_symbol *collector,
+				      struct ipa_symbol *lockaddr,
 				      CORE_ADDR *jump_entry,
 				      CORE_ADDR *trampoline,
 				      ULONGEST *trampoline_size,
