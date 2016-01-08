@@ -4380,14 +4380,15 @@ remote_check_symbols (void)
   while (startswith (reply, "qSymbol:"))
     {
       struct bound_minimal_symbol sym;
+      char *sym_addr_str = "";
+      char *sym_name = &reply[8];
+      int target_flags = 0;
 
       tmp = &reply[8];
       end = hex2bin (tmp, (gdb_byte *) msg, strlen (tmp) / 2);
       msg[end] = '\0';
       sym = lookup_minimal_symbol (msg, NULL, NULL);
-      if (sym.minsym == NULL)
-	xsnprintf (msg, get_remote_packet_size (), "qSymbol::%s", &reply[8]);
-      else
+      if (sym.minsym != NULL)
 	{
 	  int addr_size = gdbarch_addr_bit (target_gdbarch ()) / 8;
 	  CORE_ADDR sym_addr = BMSYMBOL_VALUE_ADDRESS (sym);
@@ -4398,9 +4399,17 @@ remote_check_symbols (void)
 							 sym_addr,
 							 &current_target);
 
-	  xsnprintf (msg, get_remote_packet_size (), "qSymbol:%s:%s",
-		     phex_nz (sym_addr, addr_size), &reply[8]);
+	  sym_addr_str = phex_nz (sym_addr, addr_size);
+
+	  if (MSYMBOL_TARGET_FLAG_1 (sym.minsym))
+	    target_flags |= (1 << 0);
+
+	  if (MSYMBOL_TARGET_FLAG_2 (sym.minsym))
+	    target_flags |= (1 << 1);
 	}
+
+      xsnprintf (msg, get_remote_packet_size (), "qSymbol:%s:%s:%d",
+		 sym_addr_str, &reply[8], target_flags);
   
       putpkt (msg);
       getpkt (&rs->buf, &rs->buf_size, 0);

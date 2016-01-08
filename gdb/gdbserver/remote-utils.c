@@ -97,6 +97,7 @@ struct sym_cache
 {
   char *name;
   CORE_ADDR addr;
+  int target_flags;
   struct sym_cache *next;
 };
 
@@ -1472,10 +1473,11 @@ clear_symbol_cache (struct sym_cache **symcache_p)
    Returns 1 if the symbol is found, 0 if it is not, -1 on error.  */
 
 int
-look_up_one_symbol (const char *name, CORE_ADDR *addrp, int may_ask_gdb)
+look_up_one_symbol (const char *name, CORE_ADDR *addr_ptr, int *target_flags_ptr,
+		    int may_ask_gdb)
 {
   char own_buf[266], *p, *q;
-  int len;
+  int len, target_flags;
   struct sym_cache *sym;
   struct process_info *proc;
 
@@ -1485,7 +1487,9 @@ look_up_one_symbol (const char *name, CORE_ADDR *addrp, int may_ask_gdb)
   for (sym = proc->symbol_cache; sym; sym = sym->next)
     if (strcmp (name, sym->name) == 0)
       {
-	*addrp = sym->addr;
+	*addr_ptr = sym->addr;
+	if (target_flags_ptr)
+	  *target_flags_ptr = sym->target_flags;
 	return 1;
       }
 
@@ -1546,12 +1550,38 @@ look_up_one_symbol (const char *name, CORE_ADDR *addrp, int may_ask_gdb)
   if (p == q || *q == '\0')
     return 0;
 
-  decode_address (addrp, p, q - p);
+  decode_address (addr_ptr, p, q - p);
+
+  /* Skip the name */
+  q++;
+  p = q;
+
+  while (*q && *q != ':')
+    q++;
+
+  if (p == q || *q == '\0')
+    return 0;
+
+  /* Get the flags */
+  q++;
+  p = q;
+
+  while (isdigit(*q))
+    q++;
+
+  if (p == q)
+    return 0;
+
+  target_flags = atoi (p);
+
+  if (target_flags_ptr)
+    *target_flags_ptr = target_flags;
 
   /* Save the symbol in our cache.  */
   sym = XNEW (struct sym_cache);
   sym->name = xstrdup (name);
-  sym->addr = *addrp;
+  sym->addr = *addr_ptr;
+  sym->target_flags = target_flags;
   sym->next = proc->symbol_cache;
   proc->symbol_cache = sym;
 
