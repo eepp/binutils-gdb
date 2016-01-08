@@ -17,6 +17,14 @@
 
 extern const unsigned short thumb2_breakpoint[];
 
+/* Enum describing the different kinds of breakpoints.  */
+enum arm_breakpoint_kinds
+{
+   ARM_BP_KIND_THUMB = 2,
+   ARM_BP_KIND_THUMB2 = 3,
+   ARM_BP_KIND_ARM = 4,
+};
+
 extern struct regs_info regs_info_aarch32;
 
 void arm_fill_gregset (struct regcache *regcache, void *buf);
