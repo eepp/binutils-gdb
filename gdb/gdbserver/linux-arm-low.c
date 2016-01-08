@@ -1526,6 +1526,24 @@ copy_instruction_thumb32 (CORE_ADDR *to, CORE_ADDR from)
 }
 
 static int
+arm_get_thread_area (int lwpid, CORE_ADDR *addr)
+{
+  uint32_t val;
+
+  if (ptrace (PTRACE_GET_THREAD_AREA, lwpid, NULL, &val) != 0)
+    return -1;
+
+  *addr = val;
+  return 0;
+}
+
+static int
+arm_get_min_fast_tracepoint_insn_len (void)
+{
+  return 4;
+}
+
+static int
 arm_install_fast_tracepoint_jump_pad_arm (struct tracepoint *tp,
 					  CORE_ADDR collector,
 					  CORE_ADDR lockaddr,
@@ -1909,7 +1927,7 @@ arm_install_fast_tracepoint_jump_pad_thumb2 (struct tracepoint *tp,
   return 0;
 }
 
-static int __attribute__((unused))
+static int
 arm_install_fast_tracepoint_jump_pad (struct tracepoint *tp,
 				      CORE_ADDR collector,
 				      CORE_ADDR lockaddr,
@@ -1982,10 +2000,10 @@ struct linux_target_ops the_low_target = {
   arm_prepare_to_resume,
   NULL, /* process_qsupported */
   arm_supports_tracepoints,
-  NULL, /* get_thread_area */
-  NULL, /* install_fast_tracepoint_jump_pad */
+  arm_get_thread_area,          /* get_thread_area */
+  arm_install_fast_tracepoint_jump_pad, /* install_fast_tracepoint_jump_pad */
   NULL, /* emit_ops */
-  NULL, /* get_min_fast_tracepoint_insn_len */
+  arm_get_min_fast_tracepoint_insn_len, /* get_min_fast_tracepoint_insn_len */
   NULL, /* supports_range_stepping */
   arm_breakpoint_kind_from_current_state,
   arm_supports_hardware_single_step
