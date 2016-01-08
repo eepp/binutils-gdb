@@ -3,6 +3,8 @@
 
 *** Changes since GDB 7.10
 
+* Support for tracepoints on ARM linux was added in GDBServer.
+
 * Per-inferior thread numbers
 
   Thread numbers are now per inferior instead of global.  If you're
