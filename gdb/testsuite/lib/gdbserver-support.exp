@@ -119,7 +119,14 @@ proc find_gdbserver { } {
   }
 
   if [target_info exists gdb_server_prog] {
-    return [target_info gdb_server_prog]
+    set gdbserver [target_info gdb_server_prog]
+
+    if {[remote_file target exists "${gdbserver}"] == 0} {
+      return "${gdbserver}"
+    } else {
+      error "Specified gdbserver program does not exist."
+      return ""
+    }
   }
 
   set gdbserver "${GDB}server"
