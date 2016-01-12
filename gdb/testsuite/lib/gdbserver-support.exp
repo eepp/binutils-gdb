@@ -124,8 +124,7 @@ proc find_gdbserver { } {
     if {[remote_file target exists "${gdbserver}"] == 0} {
       return "${gdbserver}"
     } else {
-      error "Specified gdbserver program does not exist."
-      return ""
+      error "gdbserver (${gdbserver}) couldn't be found on the target."
     }
   }
 
