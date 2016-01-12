@@ -314,7 +314,7 @@ proc gdb_run_cmd {args} {
 # This doesn't work quite right yet.
 # Use -notransfer here so that test cases (like chng-sym.exp)
 # may test for additional start-up messages.
-   gdb_expect 60 {
+    gdb_expect 60 {
 	-re "The program .* has been started already.*y or n. $" {
 	    send_gdb "y\n"
 	    exp_continue
