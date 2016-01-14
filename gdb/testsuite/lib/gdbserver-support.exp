@@ -415,10 +415,7 @@ proc gdbserver_run { child_args } {
 	}
     }
 
-    if { [catch { gdbserver_spawn $child_args } res] == 1 } {
-	perror $res
-	return 2
-    }
+    set res [gdbserver_spawn $child_args]
     set gdbserver_protocol [lindex $res 0]
     set gdbserver_gdbport [lindex $res 1]
 
