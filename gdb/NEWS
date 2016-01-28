@@ -148,6 +148,10 @@ show ada print-signatures"
 
 * New remote packets
 
+qSymbol sym_flags field
+  The qSymbol reply packet contains a new sym_flags field, to transmit
+  the target-specific symbol flags.
+
 exec stop reason
   Indicates that an exec system call was executed.
 
