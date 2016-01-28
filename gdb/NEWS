@@ -3,6 +3,8 @@
 
 *** Changes since GDB 7.10
 
+* Support for tracepoints on ARM linux was added in GDBServer.
+
 * GDB now supports debugging kernel-based threads on FreeBSD.
 
 * Per-inferior thread numbers
