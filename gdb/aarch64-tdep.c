@@ -3199,8 +3199,8 @@ aarch64_record_asimd_load_store (insn_decode_record *aarch64_insn_r)
                 record_buf_mem[mem_index++] = esize / 8;
                 record_buf_mem[mem_index++] = address + addr_offset;
               }
-            addr_offset = addr_offset + (esize / 8);
-            reg_rt = (reg_rt + 1) % 32;
+	  addr_offset = addr_offset + (esize / 8);
+	  reg_rt = (reg_rt + 1) % 32;
         }
     }
   /* Load/store multiple structure.  */
