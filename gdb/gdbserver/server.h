@@ -140,4 +140,10 @@ extern void discard_queued_stop_replies (ptid_t ptid);
 /* Definition for any syscall, used for unfiltered syscall reporting.  */
 #define ANY_SYSCALL (-2)
 
+struct ipa_symbol
+{
+  int target_flags;
+  CORE_ADDR addr;
+};
+
 #endif /* SERVER_H */
