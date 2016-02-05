@@ -24343,6 +24343,9 @@ sequences, such as @code{\n}, @samp{\t}, @samp{\\}, @samp{\"},
 single character.  Octal and hexadecimal escape sequences are not
 supported.
 
+@code{printf} supports the @samp{q} conversion letter to print the label
+of a C enumeration value.
+
 Additionally, @code{printf} supports conversion specifications for DFP
 (@dfn{Decimal Floating Point}) types using the following length modifiers
 together with a floating point specifier.
