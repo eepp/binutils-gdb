@@ -526,6 +526,65 @@ generic_val_print_ref (struct type *type, const gdb_byte *valaddr,
     }
 }
 
+void
+val_print_enum_label (struct type *type, const gdb_byte *valaddr,
+		      int embedded_offset, struct ui_file *stream)
+{
+  int len = TYPE_NFIELDS (type);
+  int i;
+  struct gdbarch *gdbarch = get_type_arch (type);
+  int unit_size = gdbarch_addressable_memory_unit_size (gdbarch);
+  LONGEST val = unpack_long (type, valaddr + embedded_offset * unit_size);
+
+  for (i = 0; i < len; i++)
+    {
+      QUIT;
+      if (val == TYPE_FIELD_ENUMVAL (type, i))
+      {
+	break;
+      }
+    }
+  if (i < len)
+    {
+      fputs_filtered (TYPE_FIELD_NAME (type, i), stream);
+    }
+  else if (TYPE_FLAG_ENUM (type))
+    {
+      int first = 1;
+
+      /* We have a "flag" enum, so we try to decompose it into
+       pieces as appropriate.  A flag enum has disjoint
+       constants by definition.  */
+      fputs_filtered ("(", stream);
+      for (i = 0; i < len; ++i)
+      {
+	QUIT;
+
+	if ((val & TYPE_FIELD_ENUMVAL (type, i)) != 0)
+	  {
+	    if (!first)
+	      fputs_filtered (" | ", stream);
+	    first = 0;
+
+	    val &= ~TYPE_FIELD_ENUMVAL (type, i);
+	    fputs_filtered (TYPE_FIELD_NAME (type, i), stream);
+	  }
+      }
+
+      if (first || val != 0)
+      {
+	if (!first)
+	  fputs_filtered (" | ", stream);
+	fputs_filtered ("unknown: ", stream);
+	print_longest (stream, 'd', 0, val);
+      }
+
+      fputs_filtered (")", stream);
+    }
+  else
+    print_longest (stream, 'd', 0, val);
+}
+
 /* generic_val_print helper for TYPE_CODE_ENUM.  */
 
 static void
@@ -537,64 +596,16 @@ generic_val_print_enum (struct type *type, const gdb_byte *valaddr,
   unsigned int i;
   unsigned int len;
   LONGEST val;
-  struct gdbarch *gdbarch = get_type_arch (type);
-  int unit_size = gdbarch_addressable_memory_unit_size (gdbarch);
 
   if (options->format)
     {
       val_print_scalar_formatted (type, valaddr, embedded_offset,
 				  original_value, options, 0, stream);
-      return;
-    }
-  len = TYPE_NFIELDS (type);
-  val = unpack_long (type, valaddr + embedded_offset * unit_size);
-  for (i = 0; i < len; i++)
-    {
-      QUIT;
-      if (val == TYPE_FIELD_ENUMVAL (type, i))
-	{
-	  break;
-	}
-    }
-  if (i < len)
-    {
-      fputs_filtered (TYPE_FIELD_NAME (type, i), stream);
-    }
-  else if (TYPE_FLAG_ENUM (type))
-    {
-      int first = 1;
-
-      /* We have a "flag" enum, so we try to decompose it into
-	 pieces as appropriate.  A flag enum has disjoint
-	 constants by definition.  */
-      fputs_filtered ("(", stream);
-      for (i = 0; i < len; ++i)
-	{
-	  QUIT;
-
-	  if ((val & TYPE_FIELD_ENUMVAL (type, i)) != 0)
-	    {
-	      if (!first)
-		fputs_filtered (" | ", stream);
-	      first = 0;
-
-	      val &= ~TYPE_FIELD_ENUMVAL (type, i);
-	      fputs_filtered (TYPE_FIELD_NAME (type, i), stream);
-	    }
-	}
-
-      if (first || val != 0)
-	{
-	  if (!first)
-	    fputs_filtered (" | ", stream);
-	  fputs_filtered ("unknown: ", stream);
-	  print_longest (stream, 'd', 0, val);
-	}
-
-      fputs_filtered (")", stream);
     }
   else
-    print_longest (stream, 'd', 0, val);
+    {
+      val_print_enum_label (type, valaddr, embedded_offset, stream);
+    }
 }
 
 /* generic_val_print helper for TYPE_CODE_FLAGS.  */

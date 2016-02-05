@@ -170,6 +170,9 @@ extern void val_print_unavailable (struct ui_file *stream);
 
 extern void val_print_invalid_address (struct ui_file *stream);
 
+extern void val_print_enum_label (struct type *type, const gdb_byte *valaddr,
+				  int embedded_offset, struct ui_file *stream);
+
 /* An instance of this is passed to generic_val_print and describes
    some language-specific ways to print things.  */
 

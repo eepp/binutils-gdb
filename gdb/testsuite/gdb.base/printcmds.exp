@@ -763,6 +763,15 @@ proc test_printf {} {
 	"" \
 	"create hibob command"
     gdb_test "hibob" "hi bob zzz.*y" "run hibob command"
+
+    # Test for enum printing (%q) in printf
+    gdb_test "printf \"%q\\n\", some_volatile_enum" "enumvolval1"
+    gdb_test "printf \"%q\\n\", enumvolval2" "enumvolval2"
+    gdb_test "printf \"%q\\n\", (enum some_volatile_enum) 1" "enumvolval2"
+    gdb_test "printf \"%q\\n\", (enum some_volatile_enum) 2" "\\(unknown: 2\\)"
+    gdb_test "printf \"%q\\n\", three" "\\(ONE | TWO\\)"
+
+    gdb_test "printf \"%q\\n\", 2" "Value given for enum modifier \\(%q\\) is not of an enum type."
 }
 
 #Test printing DFP values with printf

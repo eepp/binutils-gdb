@@ -35,7 +35,7 @@ enum argclass
     literal_piece,
     int_arg, long_arg, long_long_arg, ptr_arg,
     string_arg, wide_string_arg, wide_char_arg,
-    double_arg, long_double_arg, decfloat_arg
+    double_arg, long_double_arg, decfloat_arg, enum_arg
   };
 
 /* A format piece is a section of the format string that may include a
