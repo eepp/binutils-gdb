@@ -2258,6 +2258,22 @@ printf_pointer (struct ui_file *stream, const char *format,
     }
 }
 
+static void
+printf_enum (struct ui_file *stream, struct value *value)
+{
+  struct type *type = check_typedef (value_type (value));
+
+  if (TYPE_CODE (type) == TYPE_CODE_ENUM)
+    {
+      val_print_enum_label (type, value_contents_for_printing (value),
+			    value_embedded_offset (value), stream);
+    }
+  else
+    {
+      error (_("Value given for enum modifier (%%q) is not of an enum type."));
+    }
+}
+
 /* printf "printf format string" ARG to STREAM.  */
 
 static void
@@ -2445,6 +2461,9 @@ ui_printf (const char *arg, struct ui_file *stream)
 	    break;
 	  case ptr_arg:
 	    printf_pointer (stream, current_substring, val_args[i]);
+	    break;
+	  case enum_arg:
+	    printf_enum (stream, val_args[i]);
 	    break;
 	  case literal_piece:
 	    /* Print a portion of the format string that has no

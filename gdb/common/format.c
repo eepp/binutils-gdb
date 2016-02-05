@@ -294,6 +294,10 @@ parse_format_string (const char **arg)
 	  case '\0':
 	    error (_("Incomplete format specifier at end of format string"));
 
+	  case 'q':
+	    this_argclass = enum_arg;
+	    break;
+
 	  default:
 	    error (_("Unrecognized format specifier '%c' in printf"), *f);
 	  }
